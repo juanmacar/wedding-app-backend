@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  DbLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: wedding-db-layer
+      Description: MongoDB connection utilities for wedding app
+      ContentUri: nodejs/
+      CompatibleRuntimes:
+        - nodejs22.x
+      RetentionPolicy: Retain

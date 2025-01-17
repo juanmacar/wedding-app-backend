@@ -1,0 +1,1 @@
+{"statusCode":200,"headers":{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"},"body":"{\"message\":\"RSVP received successfully\",\"data\":{\"name\":\"Rosana\",\"will_attent\":\"sí\",\"plus_one_will_attend\":\"1\"}}"}

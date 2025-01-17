@@ -1,0 +1,4 @@
+{
+  "httpMethod": "POST",
+  "body": "{\"name\":\"Rosana\",\"will_attent\":\"sí\",\"plus_one_will_attend\":\"1\"}"
+}

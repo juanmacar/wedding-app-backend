@@ -1,0 +1,9 @@
+{
+  "name": "db-layer",
+  "version": "1.0.0",
+  "description": "Database utilities layer for wedding app",
+  "main": "utils/db.js",
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}
