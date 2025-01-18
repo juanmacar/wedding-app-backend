@@ -1,9 +1,11 @@
 {
-  "name": "db-layer",
+  "name": "wedding-db-layer",
   "version": "1.0.0",
-  "description": "Database utilities layer for wedding app",
-  "main": "utils/db.js",
+  "description": "Database layer for wedding RSVP app",
+  "main": "index.js",
+  "type": "module",
   "dependencies": {
-    "mongodb": "^6.3.0"
+    "dotenv": "^16.4.7",
+    "mongoose": "^8.1.1"
   }
 }

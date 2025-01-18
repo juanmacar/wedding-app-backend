@@ -1,56 +1,36 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+import mongoose from 'mongoose';
 
-let cachedClient = null;
-let cachedDb = null;
+let connection = null;
 
-const connectToDatabase = async (uri) => {
-    if (cachedDb) {
-        return cachedDb;
+export const connectToDatabase = async (uri) => {
+    if (connection) {
+        return connection;
     }
 
     try {
-        // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-        const client = new MongoClient(uri, {
-            serverApi: {
-                version: ServerApiVersion.v1,
-                strict: true,
-                deprecationErrors: true,
-            }
+        mongoose.set('strictQuery', false);
+        connection = await mongoose.connect(uri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
         });
-
-        // Connect the client to the server
-        await client.connect();
         
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
         console.log("Successfully connected to MongoDB!");
-
-        const db = client.db('casamiento2025'); // Using your actual database name
-        
-        cachedClient = client;
-        cachedDb = db;
-        return db;
+        return connection;
     } catch (error) {
         console.error('Error connecting to database:', error);
         throw error;
     }
 };
 
-const closeConnection = async () => {
-    if (cachedClient) {
+export const closeConnection = async () => {
+    if (connection) {
         try {
-            await cachedClient.close();
-            cachedClient = null;
-            cachedDb = null;
+            await mongoose.disconnect();
+            connection = null;
             console.log('Database connection closed.');
         } catch (error) {
             console.error('Error closing database connection:', error);
             throw error;
         }
     }
-};
-
-module.exports = {
-    connectToDatabase,
-    closeConnection
 };
