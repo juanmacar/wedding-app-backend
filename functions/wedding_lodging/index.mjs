@@ -4,6 +4,9 @@ import LodgingReservation from '/opt/nodejs/models/LodgingReservation.js';
 import LodgingAvailability from '/opt/nodejs/models/LodgingAvailability.js';
 
 console.log('Loading function');
+const coupleID = '0001';
+
+
 export const handler = async (event) => {
     // Set CORS headers
     const headers = {
@@ -33,13 +36,21 @@ export const handler = async (event) => {
         await connectToDatabase(uri);
         await initializeDatabase();
         console.log('Connected to database and initialized');
+        
+        // Add debug logging
+        console.log('LodgingReservation model:', LodgingReservation);
+        console.log('Available methods:', Object.keys(LodgingReservation));
+        console.log('Schema methods:', Object.keys(LodgingReservation.schema.methods));
+        console.log('Schema statics:', Object.keys(LodgingReservation.schema.statics));
+        
         const httpMethod = event.requestContext?.http?.method
 
         if (httpMethod === 'GET') {
-            const invitationId = event.queryStringParameters?.invitationId;
+            const invitationId = event.pathParameters?.invitationId;
+            console.log('Getting lodging reservation with invitation ID:', invitationId);
             
             if (!invitationId) {
-                const availability = await LodgingAvailability.findOne({}); // I bring the only document
+                const availability = await LodgingAvailability.findOne({id: coupleID});
                 return {
                     statusCode: 200,
                     headers,
@@ -48,7 +59,7 @@ export const handler = async (event) => {
             }
 
             const lodgingReservation = await LodgingReservation.findByInvitationId(invitationId);
-            
+            console.log('Found lodging reservation:', lodgingReservation);
             if (!lodgingReservation) {
                 return {
                     statusCode: 404,
@@ -67,7 +78,8 @@ export const handler = async (event) => {
         // Handle POST request (Create new lodging reservation)
         if (httpMethod === 'POST') {
             const body = JSON.parse(event.body);
-            const invitationId = body.invitationId;
+            const invitationId = event.pathParameters.invitationId
+            body.invitationId = invitationId
             
             if (!invitationId) {
                 return {
@@ -88,8 +100,31 @@ export const handler = async (event) => {
             }
 
             // Create new lodging reservation
+            const requiredSpots = body.adults + body.children;
+            const lodgingAvailability = await LodgingAvailability.findOne({id: coupleID});
+            const availableSpots = lodgingAvailability.total_spots - lodgingAvailability.taken_spots;
+            if (availableSpots < requiredSpots) {
+                return {
+                    statusCode: 409,
+                    headers,
+                    body: JSON.stringify({ error: 'Not enough available spots for lodging' })
+                };
+            }
+            const updatedLodgingAvailability = await lodgingAvailability.updateOne({id: coupleID}, { $inc: { taken_spots: requiredSpots } });
             const lodgingReservation = new LodgingReservation(body);
             await lodgingReservation.save();
+            const newTakenSpots = updatedLodgingAvailability.taken_spots;
+            if (newTakenSpots > lodgingAvailability.total_spots) {
+                await lodgingAvailability.updateOne({id: coupleID}, { $inc: { taken_spots: -requiredSpots } });
+                await lodgingReservation.deleteOne({invitationId: body.invitationId});
+                return {
+                    statusCode: 409,
+                    headers,
+                    body: JSON.stringify({ error: 'Spots were taken by another user while processing your request' })
+                };
+            }
+
+            
 
             return {
                 statusCode: 201,
@@ -101,7 +136,7 @@ export const handler = async (event) => {
         // Handle PUT request (Update lodging reservation)
         if (httpMethod === 'PUT') {
             const body = JSON.parse(event.body);
-            const invitationId = body.invitationId;
+            const invitationId = event.pathParameters.invitationId
             
             if (!invitationId) {
                 return {
@@ -133,7 +168,7 @@ export const handler = async (event) => {
 
         // Handle DELETE request (Delete lodging reservation)
         if (httpMethod === 'DELETE') {
-            const invitationId = event.queryStringParameters?.invitationId;
+            const invitationId = event.pathParameters.invitationId
             
             if (!invitationId) {
                 return {
@@ -165,7 +200,7 @@ export const handler = async (event) => {
             headers,
             body: JSON.stringify({ error: 'Method not allowed' })
         };
-        
+
     } catch (error) {
         console.error('Error:', error);
         return {
