@@ -1,4 +1,4 @@
-# Wedding RSVP API
+# Wedding Invitation App API
 
 A serverless API built with AWS Lambda and MongoDB to manage wedding guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
 
@@ -9,6 +9,9 @@ A serverless API built with AWS Lambda and MongoDB to manage wedding guest RSVPs
 - **API Gateway**: AWS HTTP API
 - **Authentication**: None (currently)
 
+# Wedding RSVP API
+
+The main API for managing guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
 ## API Endpoints
 
 The API is accessible through the base URL: `https://[your-api-gateway-url]/wedding_rsvp`
@@ -117,6 +120,88 @@ Updates an existing guest RSVP. Uses the same schema as POST but requires an exi
     }
 }
 ```
+
+## Wedding Lodging API
+
+A complementary API to manage lodging reservations for wedding guests. This API allows you to check lodging availability and make reservations.
+
+## API Endpoints
+
+The API is accessible through the base URL: `https://[your-api-gateway-url]/wedding_lodging`
+
+### Available Methods
+
+#### GET /wedding_lodging
+#### GET /wedding_lodging/{invitationId}
+
+Retrieves lodging availability information or a specific reservation.
+
+**Path Parameters:**
+- `invitationId` (optional): The invitation ID to get a specific reservation. If not provided (using base endpoint), returns general availability information.
+
+**Sample Response (without invitationId):**
+```json
+{
+    "coupleId": "0001",
+    "total_spots": 70,
+    "taken_spots": 10,
+}
+```
+
+**Sample Response (with invitationId):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+#### POST /wedding_lodging/{invitationId}
+
+Creates a new lodging reservation.
+
+**Path Parameters:**
+- `invitationId` (required): The invitation ID for the new reservation
+
+**Request Body:**
+```json
+{
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+**Success Response (201):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+**Error Responses:**
+- `409`: Not enough available spots or spots were taken while processing
+- `400`: Missing required fields or invalid input
+
+#### PUT /wedding_lodging/{invitationId}
+
+Updates an existing lodging reservation.
+
+**Path Parameters:**
+- `invitationId` (required): The invitation ID of the reservation to update
+
+**Request Body:** Same as POST
+
+**Success Response (200):** Updated reservation object
+
+**Error Responses:**
+- `404`: Reservation not found
+- `400`: Missing required fields or invalid input
 
 ## Error Responses
 
