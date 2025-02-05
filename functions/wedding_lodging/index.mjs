@@ -98,18 +98,17 @@ export const handler = async (event) => {
                     body: JSON.stringify({ error: 'Lodging Reservation with this invitationId already exists' })
                 };
             }
-
-            // Create new lodging reservation
-            const requiredSpots = body.adults + body.children;
-            const lodgingAvailability = await LodgingAvailability.findOne({coupleId: coupleId});
-            const availableSpots = lodgingAvailability.total_spots - lodgingAvailability.taken_spots;
-            if (availableSpots < requiredSpots) {
+            //Check if this offers lodging
+            const lodgingExists = await LodgingAvailability.findOne({ coupleId: coupleId });
+            if (!lodgingExists) {
                 return {
-                    statusCode: 409,
+                    statusCode: 404,  // Using 404 for "not found"
                     headers,
-                    body: JSON.stringify({ error: 'Not enough available spots for lodging' })
+                    body: JSON.stringify({ error: 'Lodging not found for this couple' })
                 };
             }
+            // Create new lodging reservation
+            const requiredSpots = body.adults + body.children;
             const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
                 {
                     coupleId: coupleId,

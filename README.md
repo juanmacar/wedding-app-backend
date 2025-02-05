@@ -185,8 +185,11 @@ Creates a new lodging reservation.
 ```
 
 **Error Responses:**
-- `409`: Not enough available spots or spots were taken while processing
 - `400`: Missing required fields or invalid input
+- `404`: Lodging not found for this couple
+- `409`: One of the following:
+  - Lodging Reservation with this invitationId already exists
+  - Not enough spots available
 
 #### PUT /wedding_lodging/{invitationId}
 
