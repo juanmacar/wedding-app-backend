@@ -4,7 +4,7 @@ import LodgingReservation from '/opt/nodejs/models/LodgingReservation.js';
 import LodgingAvailability from '/opt/nodejs/models/LodgingAvailability.js';
 
 console.log('Loading function');
-const coupleID = '0001';
+const coupleId = '0001';
 
 
 export const handler = async (event) => {
@@ -50,7 +50,7 @@ export const handler = async (event) => {
             console.log('Getting lodging reservation with invitation ID:', invitationId);
             
             if (!invitationId) {
-                const availability = await LodgingAvailability.findOne({id: coupleID});
+                const availability = await LodgingAvailability.findOne({id: coupleId});
                 return {
                     statusCode: 200,
                     headers,
@@ -101,7 +101,7 @@ export const handler = async (event) => {
 
             // Create new lodging reservation
             const requiredSpots = body.adults + body.children;
-            const lodgingAvailability = await LodgingAvailability.findOne({id: coupleID});
+            const lodgingAvailability = await LodgingAvailability.findOne({coupleId: coupleId});
             const availableSpots = lodgingAvailability.total_spots - lodgingAvailability.taken_spots;
             if (availableSpots < requiredSpots) {
                 return {
@@ -110,21 +110,30 @@ export const handler = async (event) => {
                     body: JSON.stringify({ error: 'Not enough available spots for lodging' })
                 };
             }
-            const updatedLodgingAvailability = await lodgingAvailability.updateOne({id: coupleID}, { $inc: { taken_spots: requiredSpots } });
-            const lodgingReservation = new LodgingReservation(body);
-            await lodgingReservation.save();
-            const newTakenSpots = updatedLodgingAvailability.taken_spots;
-            if (newTakenSpots > lodgingAvailability.total_spots) {
-                await lodgingAvailability.updateOne({id: coupleID}, { $inc: { taken_spots: -requiredSpots } });
-                await lodgingReservation.deleteOne({invitationId: body.invitationId});
+            const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
+                {
+                    coupleId: coupleId,
+                    // Checking we don't exceed total spots
+                    $expr: { 
+                        $lte: [
+                            { $add: ["$taken_spots", requiredSpots] }, 
+                            "$total_spots"
+                        ]
+                    }
+                },
+                { $inc: { taken_spots: requiredSpots } },
+                { new: true } // This returns the updated document
+            );
+            if (!updatedLodgingAvailability) {
                 return {
                     statusCode: 409,
                     headers,
-                    body: JSON.stringify({ error: 'Spots were taken by another user while processing your request' })
+                    body: JSON.stringify({ error: 'Not enough spots available' })
                 };
             }
-
             
+            const lodgingReservation = new LodgingReservation(body);
+            await lodgingReservation.save();
 
             return {
                 statusCode: 201,
