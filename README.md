@@ -193,18 +193,50 @@ Creates a new lodging reservation.
 
 #### PUT /wedding_lodging/{invitationId}
 
-Updates an existing lodging reservation.
+Updates an existing lodging reservation. The endpoint will also update the available spots count.
 
 **Path Parameters:**
 - `invitationId` (required): The invitation ID of the reservation to update
 
-**Request Body:** Same as POST
+**Request Body:** Same schema as POST
 
-**Success Response (200):** Updated reservation object
+**Success Response (200):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
 
 **Error Responses:**
-- `404`: Reservation not found
-- `400`: Missing required fields or invalid input
+- `400`: One of the following:
+  - Missing required fields or invalid input
+  - Not enough spots available to update this lodging reservation
+- `404`: Lodging Reservation not found
+- `500`: Server error while updating
+
+#### DELETE /wedding_lodging/{invitationId}
+
+Deletes an existing lodging reservation and updates the available spots count.
+
+**Path Parameters:**
+- `invitationId` (required): The invitation ID of the reservation to delete
+
+**Success Response (200):**
+```json
+{
+    "message": "Lodging Reservation deleted with invitation ID INV001"
+}
+```
+
+**Error Responses:**
+- `400`: Missing invitationId
+- `404`: Lodging Reservation not found
+- `500`: One of the following:
+  - Error occurred while updating the count of taken spots
+  - Error occurred while deleting the lodging reservation
 
 ## Error Responses
 
