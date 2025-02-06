@@ -184,13 +184,6 @@ Creates a new lodging reservation.
 }
 ```
 
-**Error Responses:**
-- `400`: Missing required fields or invalid input
-- `404`: Lodging not found for this couple
-- `409`: One of the following:
-  - Lodging Reservation with this invitationId already exists
-  - Not enough spots available
-
 #### PUT /wedding_lodging/{invitationId}
 
 Updates an existing lodging reservation. The endpoint will also update the available spots count.
@@ -210,13 +203,6 @@ Updates an existing lodging reservation. The endpoint will also update the avail
 }
 ```
 
-**Error Responses:**
-- `400`: One of the following:
-  - Missing required fields or invalid input
-  - Not enough spots available to update this lodging reservation
-- `404`: Lodging Reservation not found
-- `500`: Server error while updating
-
 #### DELETE /wedding_lodging/{invitationId}
 
 Deletes an existing lodging reservation and updates the available spots count.
@@ -231,23 +217,25 @@ Deletes an existing lodging reservation and updates the available spots count.
 }
 ```
 
-**Error Responses:**
-- `400`: Missing invitationId
-- `404`: Lodging Reservation not found
-- `500`: One of the following:
-  - Error occurred while updating the count of taken spots
-  - Error occurred while deleting the lodging reservation
-
 ## Error Responses
 
 The API returns appropriate HTTP status codes:
 
 - `200`: Success (GET, PUT)
 - `201`: Created (POST - successful creation)
-- `400`: Bad Request (invalid input)
-- `404`: Not Found (invalid invitationId)
-- `409`: Conflict (POST - invitationId already exists)
-- `500`: Server Error
+- `400`: Bad Request (missing or invalid invitationId)
+- `404`: Not Found (lodging reservation not found or lodging not available for this users)
+- `409`: Conflict (reservation exists or not enough spots)
+- `405`: Method Not Allowed
+- `500`: Server Error (database operations or unexpected errors)
+
+All error responses include a message and optional error details:
+```json
+{
+    "message": "Error description",
+    "error": "Optional detailed error message"
+}
+```
 
 ## Local Development
 
