@@ -31,6 +31,5 @@ LodgingReservationSchema.statics.findByInvitationId = async function(invitationI
 
 // Try to get the existing model first, or create a new one if it doesn't exist
 const LodgingReservation = mongoose.model('Lodging_Reservation', LodgingReservationSchema);
-console.log('Schema statics:', Object.keys(LodgingReservation.schema.statics));
 
 export default LodgingReservation;

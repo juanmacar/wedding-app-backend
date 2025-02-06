@@ -21,6 +21,14 @@ const TransportationReservationSchema = new mongoose.Schema({
     }
 }, { collection: 'transportation_reservations' });
 
+// Define the static method directly on the schema
+TransportationReservationSchema.statics.findByInvitationId = async function(invitationId) {
+    console.log('Searching for transportation reservation with invitationId:', invitationId);
+    const transportationReservation = await this.findOne({ invitationId });
+    console.log('Found transportation reservation:', transportationReservation);
+    return transportationReservation;
+};
+
 const TransportationReservation = mongoose.model('Transportation_Reservation', TransportationReservationSchema);
 
 export default TransportationReservation;
