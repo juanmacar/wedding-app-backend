@@ -2,10 +2,10 @@ import { connectToDatabase, closeConnection } from '/opt/nodejs/utils/db.js';
 import { initializeDatabase } from '/opt/nodejs/utils/dbInit.js';
 import LodgingReservation from '/opt/nodejs/models/LodgingReservation.js';
 import LodgingAvailability from '/opt/nodejs/models/LodgingAvailability.js';
+import { updateReservationAndAvailability, createReservationAndUpdateAvailability } from '/opt/nodejs/services/lodgingReservationTransactions.js';
 
 console.log('Loading function');
 const coupleId = '0001';
-
 
 export const handler = async (event) => {
     // Set CORS headers
@@ -50,7 +50,7 @@ export const handler = async (event) => {
             console.log('Getting lodging reservation with invitation ID:', invitationId);
             
             if (!invitationId) {
-                const availability = await LodgingAvailability.findOne({id: coupleId});
+                const availability = await LodgingAvailability.findOne({coupleId: coupleId});
                 return {
                     statusCode: 200,
                     headers,
@@ -107,49 +107,23 @@ export const handler = async (event) => {
                     body: JSON.stringify({ error: 'Lodging not found for this couple' })
                 };
             }
+
             // Create new lodging reservation
             const requiredSpots = body.adults + body.children;
+            
             try {
-                const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
-                    {
-                        coupleId: coupleId,
-                        // Checking we don't exceed total spots
-                        $expr: { 
-                            $lte: [
-                                { $add: ["$taken_spots", requiredSpots] }, 
-                                "$total_spots"
-                            ]
-                        }
-                    },
-                    { $inc: { taken_spots: requiredSpots } },
-                    { new: true } // This returns the updated document
-                );
-
-                if (!updatedLodgingAvailability) {
-                    return {
-                        statusCode: 400,
-                        headers,
-                        body: JSON.stringify({
-                            message: "Not enough spots available for this lodging"
-                        })
-                    };
-                }
-
-                const lodgingReservation = new LodgingReservation(body);
-                await lodgingReservation.save();
-
+                const result = await createReservationAndUpdateAvailability(body, coupleId, requiredSpots);
                 return {
                     statusCode: 201,
                     headers,
-                    body: JSON.stringify(lodgingReservation)
+                    body: JSON.stringify(result.newReservation)
                 };
             } catch (error) {
                 return {
-                    statusCode: 500,
+                    statusCode: error.statusCode || 500,
                     headers,
                     body: JSON.stringify({
-                        message: "An error occurred while updating lodging",
-                        error: error.message
+                        message: error.message
                     })
                 };
             }
@@ -186,67 +160,25 @@ export const handler = async (event) => {
                     body: JSON.stringify({ error: 'Lodging not found for this couple' })
                 };
             }
+
             // Update existing lodging reservation
             const NewRequiredSpots = body.adults + body.children;
             const previousSpotsRequired = lodgingReservation.adults + lodgingReservation.children;
             const spotsDiff = NewRequiredSpots - previousSpotsRequired;
+
             try {
-                const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
-                    {
-                        coupleId: coupleId,
-                        // Checking we don't exceed total spots
-                        $expr: { 
-                            $lte: [
-                                { $add: ["$taken_spots", spotsDiff] }, 
-                                "$total_spots"
-                            ]
-                        }
-                    },
-                    { $inc: { taken_spots: spotsDiff } },
-                    { new: true } // This returns the updated document
-                );
-
-                if (!updatedLodgingAvailability) {
-                    return {
-                        statusCode: 400,
-                        headers,
-                        body: JSON.stringify({
-                            message: "Not enough spots available to update this lodging reservation"
-                        })
-                    };
-                }
-
-                // Update the lodging reservation
-                try {
-                    const updatedLodgingReservation = await LodgingReservation.findOneAndUpdate(
-                        { invitationId: invitationId },
-                        body,
-                        { new: true } // This returns the updated document
-                    );
-    
-                    return {
-                        statusCode: 200,
-                        headers,
-                        body: JSON.stringify(updatedLodgingReservation)
-                    };
-                }
-                catch (error) {
-                    return {
-                        statusCode: 500,
-                        headers,
-                        body: JSON.stringify({
-                            message: "An error occurred while updating the lodging reservation",
-                            error: error.message
-                        })
-                    };
-                }
+                const result = await updateReservationAndAvailability(invitationId, body, coupleId, spotsDiff);
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify(result.updatedReservation)
+                };
             } catch (error) {
                 return {
-                    statusCode: 500,
+                    statusCode: error.statusCode || 500,
                     headers,
                     body: JSON.stringify({
-                        message: "An error occurred while updating the count of taken spots",
-                        error: error.message
+                        message: error.message
                     })
                 };
             }
