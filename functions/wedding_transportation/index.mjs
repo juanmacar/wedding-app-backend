@@ -2,7 +2,7 @@ import { connectToDatabase, closeConnection } from '/opt/nodejs/utils/db.js';
 import { initializeDatabase } from '/opt/nodejs/utils/dbInit.js';
 import TransportationReservation from '/opt/nodejs/models/TransportationReservation.js';
 import TransportationAvailability from '/opt/nodejs/models/TransportationAvailability.js';
-import { updateReservationAndAvailability, createReservationAndUpdateAvailability } from '/opt/nodejs/services/lodgingReservationTransactions.js';
+import { updateReservationAndAvailability, createReservationAndUpdateAvailability } from '/opt/nodejs/services/transportationReservationTransactions.js';
 
 console.log('Loading function');
 const coupleId = '0001';
