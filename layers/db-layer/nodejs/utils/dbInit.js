@@ -2,6 +2,7 @@ import Guest from '../models/Guest.js';
 import LodgingReservation from '../models/LodgingReservation.js';
 import TransportationReservation from '../models/TransportationReservation.js';
 import LodgingAvailability from '../models/LodgingAvailability.js';
+import TransportationAvailability from '../models/TransportationAvailability.js';
 
 const totalLodgingSpots = 70;
 const totalTransportationSpots = 70;
