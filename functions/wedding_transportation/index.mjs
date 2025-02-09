@@ -44,13 +44,17 @@ export const handler = async (event) => {
         console.log('Schema statics:', Object.keys(TransportationReservation.schema.statics));
         
         const httpMethod = event.requestContext?.http?.method
+        console.log('HTTP Method:', httpMethod);
+        console.log('Event:', JSON.stringify(event));
 
         if (httpMethod === 'GET') {
             const invitationId = event.pathParameters?.invitationId;
             console.log('Getting transportation reservation with invitation ID:', invitationId);
             
             if (!invitationId) {
+                console.log('No invitationId provided, fetching availability with coupleId:', coupleId);
                 const availability = await TransportationAvailability.findOne({coupleId: coupleId});
+                console.log('Found availability:', availability);
                 return {
                     statusCode: 200,
                     headers,

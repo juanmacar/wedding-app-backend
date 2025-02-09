@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const LodgingAvailabilitySchema = new mongoose.Schema({
+    coupleId: {
+        type: String,
+        required: true
+    },
     total_spots: {
         type: Number,
         required: true,

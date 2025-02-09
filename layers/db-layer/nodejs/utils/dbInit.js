@@ -6,6 +6,7 @@ import TransportationAvailability from '../models/TransportationAvailability.js'
 
 const totalLodgingSpots = 70;
 const totalTransportationSpots = 70;
+const coupleId = '0001';
 export const initializeDatabase = async () => {
     try {
         // Initialize collections by making a simple query to  create the collections if they don't exist
@@ -19,6 +20,7 @@ export const initializeDatabase = async () => {
 
         if (!lodgingAvailabilityDoc) {
             const availability = new LodgingAvailability({
+                coupleId,
                 total_spots: totalLodgingSpots,
                 taken_spots: 0
             });
@@ -30,6 +32,7 @@ export const initializeDatabase = async () => {
 
         if (!transportationAvailabilityDoc) {
             const availability = new TransportationAvailability({
+                coupleId,
                 total_spots: totalTransportationSpots,
                 taken_spots: 0
             });
