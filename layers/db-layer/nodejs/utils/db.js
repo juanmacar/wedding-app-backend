@@ -3,15 +3,26 @@ import mongoose from 'mongoose';
 let connection = null;
 
 export const connectToDatabase = async (uri) => {
-    if (connection) {
+    // If there's an existing connection, check if it's ready
+    if (connection && mongoose.connection.readyState === 1) {
         return connection;
+    }
+
+    // If there's a connection but it's not ready, disconnect first
+    if (connection || mongoose.connection.readyState !== 0) {
+        try {
+            await mongoose.disconnect();
+        } catch (err) {
+            console.log('Error disconnecting from previous connection:', err);
+        }
+        connection = null;
     }
 
     try {
         mongoose.set('strictQuery', false);
         connection = await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+            serverSelectionTimeoutMS: 2000, // Timeout after 2 seconds
+            socketTimeoutMS: 2000,
         });
         
         console.log("Successfully connected to MongoDB!");
@@ -23,7 +34,7 @@ export const connectToDatabase = async (uri) => {
 };
 
 export const closeConnection = async () => {
-    if (connection) {
+    if (connection || mongoose.connection.readyState !== 0) {
         try {
             await mongoose.disconnect();
             connection = null;

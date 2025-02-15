@@ -1,6 +1,6 @@
 # Wedding Invitation App API
 
-A serverless API built with AWS Lambda and MongoDB to manage wedding guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
+A serverless API built with AWS Lambda and MongoDB to manage wedding invitations. This API allows you to create, retrieve, and update guest RSVPs for a wedding event, confirm if they'll use the lodging provided, and manage transportation reservations.
 
 ## Architecture
 
@@ -14,11 +14,11 @@ A serverless API built with AWS Lambda and MongoDB to manage wedding guest RSVPs
 The main API for managing guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
 ## API Endpoints
 
-The API is accessible through the base URL: `https://[your-api-gateway-url]/wedding_rsvp`
+The API is accessible through the base URL: `https://[your-api-gateway-url]/rsvp`
 
 ### Available Methods
 
-#### GET /wedding_rsvp
+#### GET /rsvp
 
 Retrieves guest information using their invitation ID.
 
@@ -58,7 +58,7 @@ GET /wedding_rsvp?invitationId=INV001
 }
 ```
 
-#### POST /wedding_rsvp
+#### POST /rsvp
 
 Creates a new guest RSVP entry.
 
@@ -104,7 +104,7 @@ Creates a new guest RSVP entry.
 - `songRequest` (string)
 - `additionalNotes` (string)
 
-#### PUT /wedding_rsvp
+#### PUT /rsvp
 
 Updates an existing guest RSVP. Uses the same schema as POST but requires an existing invitationId.
 
@@ -121,23 +121,23 @@ Updates an existing guest RSVP. Uses the same schema as POST but requires an exi
 }
 ```
 
-## Wedding Lodging API
+## Wedding Lodging endpoint
 
 A complementary API to manage lodging reservations for wedding guests. This API allows you to check lodging availability and make reservations.
 
 ## API Endpoints
 
-The API is accessible through the base URL: `https://[your-api-gateway-url]/wedding_lodging`
+The API is accessible through the base URL: `https://[your-api-gateway-url]/lodging`
 
 ### Available Methods
 
-#### GET /wedding_lodging
-#### GET /wedding_lodging/{invitationId}
+#### GET /lodging
+#### GET /lodging/{invitationId}
 
 Retrieves lodging availability information or a specific reservation.
 
 **Path Parameters:**
-- `invitationId` (optional): The invitation ID to get a specific reservation. If not provided (using base endpoint), returns general availability information.
+- `invitationId` (optional): The invitation ID to get a specific reservation. If not provided (using base endpoint), returns lodging availability information.
 
 **Sample Response (without invitationId):**
 ```json
@@ -158,7 +158,7 @@ Retrieves lodging availability information or a specific reservation.
 }
 ```
 
-#### POST /wedding_lodging/{invitationId}
+#### POST /lodging/{invitationId}
 
 Creates a new lodging reservation.
 
@@ -184,7 +184,7 @@ Creates a new lodging reservation.
 }
 ```
 
-#### PUT /wedding_lodging/{invitationId}
+#### PUT /lodging/{invitationId}
 
 Updates an existing lodging reservation. The endpoint will also update the available spots count.
 
@@ -203,9 +203,112 @@ Updates an existing lodging reservation. The endpoint will also update the avail
 }
 ```
 
-#### DELETE /wedding_lodging/{invitationId}
+#### DELETE /lodging/{invitationId}
 
 Deletes an existing lodging reservation and updates the available spots count.
+
+**Path Parameters:**
+- `invitationId` (required): The invitation ID of the reservation to delete
+
+**Success Response (200):**
+```json
+{
+    "message": "Lodging Reservation deleted with invitation ID INV001"
+}
+```
+
+## Wedding Transportation endpoint
+
+The API for managing guest transportation reservations and checking transportation availability.
+
+#### Base URL
+`https://[your-api-gateway-url]/transportation`
+
+#### Available Methods
+
+##### GET /transportation
+Retrieves general transportation availability information.
+
+**Sample Request:**
+```
+GET /transportation
+
+**Success Response (200):**
+```json
+{
+    "coupleId": "0001",
+    "availableSeats": 50,
+    "totalCapacity": 100
+}
+```
+
+##### GET /transportation/{invitationId}
+Retrieves transportation reservation information for a specific guest.
+
+**Path Parameters:**
+- `invitationId` (required): The unique identifier for the guest
+
+**Sample Request:**
+```
+GET /transportation/INV001
+```
+
+**Success Response (200):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+##### POST /transportation/{invitationId}
+Creates a new transportation reservation for a guest.
+
+**Path Parameters:**
+- `invitationId` (required): The unique identifier for the guest
+
+**Request Body:**
+```json
+{
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+**Success Response (201):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+##### PUT /transportation/{invitationId}
+
+Updates an existing transportation reservation. The endpoint will also update the available spots count.
+
+**Path Parameters:**
+- `invitationId` (required): The invitation ID of the reservation to update
+
+**Request Body:** Same schema as POST
+
+**Success Response (200):**
+```json
+{
+    "invitationId": "INV001",
+    "guests": ["John Doe", "Jane Doe"],
+    "adults": 2,
+    "children": 1
+}
+```
+
+##### DELETE /transportation/{invitationId}
+
+Deletes an existing transportation reservation and updates the available spots count.
 
 **Path Parameters:**
 - `invitationId` (required): The invitation ID of the reservation to delete
@@ -224,10 +327,10 @@ The API returns appropriate HTTP status codes:
 - `200`: Success (GET, PUT)
 - `201`: Created (POST - successful creation)
 - `400`: Bad Request (missing or invalid invitationId)
-- `404`: Not Found (lodging reservation not found or lodging not available for this users)
+- `404`: Not Found (guest,lodging or transportation reservation not found or not available for this users)
 - `409`: Conflict (reservation exists or not enough spots)
 - `405`: Method Not Allowed
-- `500`: Server Error (database operations or unexpected errors)
+- `500`: Server Error (database operations errors or unexpected errors)
 
 All error responses include a message and optional error details:
 ```json
