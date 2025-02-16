@@ -132,14 +132,14 @@ The API is accessible through the base URL: `https://[your-api-gateway-url]/lodg
 ## Available Methods
 
 ### GET /lodging
-### GET /lodging/{invitationId}
+Retrieves general lodging availability information.
 
-Retrieves lodging availability information or a specific reservation.
+**Sample Request:**
+```
+GET /lodging
+```
 
-**Path Parameters:**
-- `invitationId` (optional): The invitation ID to get a specific reservation. If not provided (using base endpoint), returns lodging availability information.
-
-**Sample Response (without invitationId):**
+**Success Response (200):**
 ```json
 {
     "coupleId": "0001",
@@ -147,8 +147,14 @@ Retrieves lodging availability information or a specific reservation.
     "taken_spots": 10
 }
 ```
+### GET /lodging/{invitationId}
 
-**Sample Response (with invitationId):**
+Retrieves lodging availability information or a specific reservation.
+
+**Path Parameters:**
+- `invitationId` (optional): The invitation ID to get a specific reservation. If not provided (using base endpoint), returns lodging availability information.
+
+**Success Response (200):**
 ```json
 {
     "invitationId": "INV001",
