@@ -1,4 +1,4 @@
-# Wedding Invitation App API
+# Wedding Invitation App Backend
 
 A serverless API built with AWS Lambda and MongoDB to manage wedding invitations. This API allows you to create, retrieve, and update guest RSVPs for a wedding event, confirm if they'll use the lodging provided, and manage transportation reservations.
 
@@ -16,9 +16,9 @@ The main API for managing guest RSVPs. This API allows you to create, retrieve, 
 
 The API is accessible through the base URL: `https://[your-api-gateway-url]/rsvp`
 
-### Available Methods
+## Available Methods
 
-#### GET /rsvp
+### GET /rsvp
 
 Retrieves guest information using their invitation ID.
 
@@ -58,7 +58,7 @@ GET /wedding_rsvp?invitationId=INV001
 }
 ```
 
-#### POST /rsvp
+### POST /rsvp
 
 Creates a new guest RSVP entry.
 
@@ -104,7 +104,7 @@ Creates a new guest RSVP entry.
 - `songRequest` (string)
 - `additionalNotes` (string)
 
-#### PUT /rsvp
+### PUT /rsvp
 
 Updates an existing guest RSVP. Uses the same schema as POST but requires an existing invitationId.
 
@@ -121,7 +121,7 @@ Updates an existing guest RSVP. Uses the same schema as POST but requires an exi
 }
 ```
 
-## Wedding Lodging endpoint
+# Wedding Lodging API
 
 A complementary API to manage lodging reservations for wedding guests. This API allows you to check lodging availability and make reservations.
 
@@ -129,10 +129,10 @@ A complementary API to manage lodging reservations for wedding guests. This API 
 
 The API is accessible through the base URL: `https://[your-api-gateway-url]/lodging`
 
-### Available Methods
+## Available Methods
 
-#### GET /lodging
-#### GET /lodging/{invitationId}
+### GET /lodging
+### GET /lodging/{invitationId}
 
 Retrieves lodging availability information or a specific reservation.
 
@@ -144,7 +144,7 @@ Retrieves lodging availability information or a specific reservation.
 {
     "coupleId": "0001",
     "total_spots": 70,
-    "taken_spots": 10,
+    "taken_spots": 10
 }
 ```
 
@@ -158,7 +158,7 @@ Retrieves lodging availability information or a specific reservation.
 }
 ```
 
-#### POST /lodging/{invitationId}
+### POST /lodging/{invitationId}
 
 Creates a new lodging reservation.
 
@@ -184,7 +184,7 @@ Creates a new lodging reservation.
 }
 ```
 
-#### PUT /lodging/{invitationId}
+### PUT /lodging/{invitationId}
 
 Updates an existing lodging reservation. The endpoint will also update the available spots count.
 
@@ -203,7 +203,7 @@ Updates an existing lodging reservation. The endpoint will also update the avail
 }
 ```
 
-#### DELETE /lodging/{invitationId}
+### DELETE /lodging/{invitationId}
 
 Deletes an existing lodging reservation and updates the available spots count.
 
@@ -217,32 +217,34 @@ Deletes an existing lodging reservation and updates the available spots count.
 }
 ```
 
-## Wedding Transportation endpoint
+# Wedding Transportation API
 
 The API for managing guest transportation reservations and checking transportation availability.
 
-#### Base URL
-`https://[your-api-gateway-url]/transportation`
+## API Endpoints
 
-#### Available Methods
+The API is accessible through the base URL: `https://[your-api-gateway-url]/transportation`
 
-##### GET /transportation
+## Available Methods
+
+### GET /transportation
 Retrieves general transportation availability information.
 
 **Sample Request:**
 ```
 GET /transportation
+```
 
 **Success Response (200):**
 ```json
 {
     "coupleId": "0001",
-    "availableSeats": 50,
-    "totalCapacity": 100
+    "total_spots": 70,
+    "taken_spots": 10
 }
 ```
 
-##### GET /transportation/{invitationId}
+### GET /transportation/{invitationId}
 Retrieves transportation reservation information for a specific guest.
 
 **Path Parameters:**
@@ -263,7 +265,7 @@ GET /transportation/INV001
 }
 ```
 
-##### POST /transportation/{invitationId}
+### POST /transportation/{invitationId}
 Creates a new transportation reservation for a guest.
 
 **Path Parameters:**
@@ -287,7 +289,7 @@ Creates a new transportation reservation for a guest.
     "children": 1
 }
 ```
-##### PUT /transportation/{invitationId}
+### PUT /transportation/{invitationId}
 
 Updates an existing transportation reservation. The endpoint will also update the available spots count.
 
@@ -306,7 +308,7 @@ Updates an existing transportation reservation. The endpoint will also update th
 }
 ```
 
-##### DELETE /transportation/{invitationId}
+### DELETE /transportation/{invitationId}
 
 Deletes an existing transportation reservation and updates the available spots count.
 
@@ -355,14 +357,16 @@ All error responses include a message and optional error details:
 
 ## Testing
 
-Use the provided test script to verify database connectivity and CRUD operations:
+Use the provided test script to verify database connectivity and some basic CRUD operations:
 
 ```bash
 cd layers/db-layer/nodejs
 node test.mjs
 ```
 
-## Database Schema
+## Database Schemas
+
+### Guest Schema
 
 The guest schema includes fields for managing:
 - Main guest information
@@ -371,6 +375,20 @@ The guest schema includes fields for managing:
 - Dietary restrictions
 - Song requests
 - Additional notes
+- Timestamps (created and modified)
+
+### Lodging Reservation Schema
+
+The lodging reservation schema includes fields for managing:
+- Guest names
+- Number of adults and children
+- Timestamps (created and modified)
+
+### Transportation Reservation Schema
+
+The transportation reservation schema includes fields for managing:
+- Guest names
+- Number of adults and children
 - Timestamps (created and modified)
 
 See `layers/db-layer/nodejs/models/Guest.js` for the complete schema definition.
