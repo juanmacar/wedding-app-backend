@@ -33,12 +33,35 @@ A Node.js Express API built to manage wedding invitations. This API allows you t
    ```
 5. The server will start on the port specified in your `.env` file (default: 3000)
 
+## Deployment on Render
+
+### Prerequisites for Render Deployment
+
+- A Render account
+- Your project pushed to a Git repository (GitHub, GitLab, etc.)
+
+### Deployment Steps
+
+1. Log in to your Render dashboard
+2. Click on 'New' and select 'Web Service'
+3. Connect your Git repository
+4. Configure the service:
+   - Name: wedding-app-backend (or your preferred name)
+   - Environment: Node
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+5. Add environment variables:
+   - Add your `MONGODB_URI` and any other required environment variables
+6. Click 'Create Web Service'
+
+The deployment should now work correctly with the added `render.yaml` and `Procfile` in your repository.
+
 # Wedding RSVP API
 
 The main API for managing guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
 ## API Endpoints
 
-The API is accessible through the base URL: `http://localhost:3000/api/rsvp`
+The API is accessible through the base URL: `http://localhost:3001/api/rsvp` (or your deployed Render URL)
 
 ## Available Methods
 
