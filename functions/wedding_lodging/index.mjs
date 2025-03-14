@@ -2,7 +2,7 @@ import { connectToDatabase, closeConnection } from '/opt/nodejs/utils/db.js';
 import { initializeDatabase } from '/opt/nodejs/utils/dbInit.js';
 import LodgingReservation from '/opt/nodejs/models/LodgingReservation.js';
 import LodgingAvailability from '/opt/nodejs/models/LodgingAvailability.js';
-import { updateReservationAndAvailability, createReservationAndUpdateAvailability } from '/opt/nodejs/services/lodgingReservationTransactions.js';
+import { updateReservationAndAvailability, createReservationAndUpdateAvailability, deleteReservationAndUpdateAvailability } from '/opt/nodejs/services/lodgingReservationTransactions.js';
 
 console.log('Loading function');
 const coupleId = '0001';
@@ -80,6 +80,7 @@ export const handler = async (event) => {
             const body = JSON.parse(event.body);
             const invitationId = event.pathParameters.invitationId
             body.invitationId = invitationId
+            console.log('Body:', body);
             
             if (!invitationId) {
                 return {
@@ -204,41 +205,28 @@ export const handler = async (event) => {
                     body: JSON.stringify({ error: 'Lodging Reservation not found with invitation ID ' + invitationId })
                 };
             }
-            const releasedSpots = lodgingReservation.adults + lodgingReservation.children;
+
             try {
-                await LodgingAvailability.findOneAndUpdate(
-                    { coupleId: coupleId },
-                    { $inc: { taken_spots: -releasedSpots } },
-                    { new: true } // This returns the updated document
-                );
-            } catch (error) {
+                const result = await deleteReservationAndUpdateAvailability(invitationId, coupleId);
                 return {
-                    statusCode: 500,
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({ 
+                        message: 'Lodging Reservation deleted with invitation ID ' + invitationId,
+                        releasedSpots: result.releasedSpots 
+                    })
+                };
+            } catch (error) {
+                const statusCode = error.statusCode || 500;
+                return {
+                    statusCode,
                     headers,
                     body: JSON.stringify({
-                        message: "An error occurred while updating the count of taken spots",
-                        error: error.message
+                        message: error.message,
+                        error: error.stack
                     })
                 };
             }
-            try {
-                await lodgingReservation.deleteOne();
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ message: 'Lodging Reservation deleted with invitation ID ' + invitationId })
-            };
-            } catch (error) {
-                return {
-                    statusCode: 500,
-                    headers,
-                    body: JSON.stringify({
-                        message: "An error occurred while deleting the lodging reservation",
-                        error: error.message
-                    })
-                };
-            }
-            
         }
 
         return {
