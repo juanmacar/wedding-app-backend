@@ -199,7 +199,7 @@ export const handler = async (event) => {
                         statusCode: 200,
                         headers,
                         body: JSON.stringify({ 
-                            message: 'Nobody attending for invitation ' + invitationId + 'lodging and transportation also deleted' 
+                            message: 'Reservation updated successfully' 
                         })
                     };
             }
