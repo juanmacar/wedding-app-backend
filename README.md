@@ -1,20 +1,44 @@
 # Wedding Invitation App Backend
 
-A serverless API built with AWS Lambda and MongoDB to manage wedding invitations. This API allows you to create, retrieve, and update guest RSVPs for a wedding event, confirm if they'll use the lodging provided, and manage transportation reservations.
+A Node.js Express API built to manage wedding invitations. This API allows you to create, retrieve, and update guest RSVPs for a wedding event, confirm if they'll use the lodging provided, and manage transportation reservations.
 
 ## Architecture
 
-- **Backend**: AWS Lambda (Node.js)
+- **Backend**: Node.js with Express
 - **Database**: MongoDB Atlas
-- **API Gateway**: AWS HTTP API
 - **Authentication**: None (currently)
+
+## Running the Application
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- MongoDB Atlas account or local MongoDB instance
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Create a `.env` file based on `.env.example` and add your MongoDB connection string
+4. Start the server:
+   ```
+   npm start
+   ```
+   Or for development with auto-reload:
+   ```
+   npm run dev
+   ```
+5. The server will start on the port specified in your `.env` file (default: 3000)
 
 # Wedding RSVP API
 
 The main API for managing guest RSVPs. This API allows you to create, retrieve, and update guest RSVPs for a wedding event.
 ## API Endpoints
 
-The API is accessible through the base URL: `https://[your-api-gateway-url]/rsvp`
+The API is accessible through the base URL: `http://localhost:3000/api/rsvp`
 
 ## Available Methods
 
@@ -366,8 +390,7 @@ All error responses include a message and optional error details:
 Use the provided test script to verify database connectivity and some basic CRUD operations:
 
 ```bash
-cd layers/db-layer/nodejs
-node test.mjs
+npm run test:rsvp
 ```
 
 ## Database Schemas
@@ -397,4 +420,4 @@ The transportation reservation schema includes fields for managing:
 - Number of adults and children
 - Timestamps (created and modified)
 
-See `layers/db-layer/nodejs/models/Guest.js` for the complete schema definition.
+See `models/Guest.js` for the complete schema definition.

@@ -1,4 +1,0 @@
-{
-  "httpMethod": "POST",
-  "body": "{\"invitationId\":\"TEST001\",\"type\":\"couple\",\"mainGuest\":{\"name\":\"Juan Test\",\"phone\":\"+1234567890\",\"attending\":true},\"hasCompanion\":true,\"companion\":{\"name\":\"Maria Test\",\"attending\":true},\"hasChildren\":false,\"children\":[],\"dietaryRestrictionsInGroup\":\"No restrictions\",\"songRequest\":\"Dancing Queen\",\"additionalNotes\":\"Looking forward to it!\"}"
-}

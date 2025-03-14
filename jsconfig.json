@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2020",
+    "baseUrl": ".",
+    "checkJs": true
+  },
+  "exclude": ["node_modules", "**/node_modules/*", "functions/**"]
+}
