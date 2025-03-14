@@ -1,6 +1,13 @@
 import { connectToDatabase, closeConnection } from '/opt/nodejs/utils/db.js';
 import Guest from '/opt/nodejs/models/Guest.js';
-
+import { updateRSVPAndRelatedReservations } from '/opt/nodejs/services/rsvpTransactions.js';
+const coupleId = '0001';
+/**
+ * Lambda function handler
+ * @param {Object} event - API Gateway Lambda Proxy Input Format
+ * @param {Object} context
+ * @returns {Object} object - API Gateway Lambda Proxy Output Format
+ */
 export const handler = async (event) => {
     console.log('Full event:', JSON.stringify(event, null, 2));
     
@@ -179,28 +186,33 @@ export const handler = async (event) => {
             console.log('Update operation:', JSON.stringify(updateOperation, null, 2));
 
             // Find and update the guest
-            const updatedGuest = await Guest.findOneAndUpdate(
-                { invitationId },
-                updateOperation,
-                { new: true, runValidators: false }
-            );
-
-            if (!updatedGuest) {
-                return {
-                    statusCode: 404,
-                    headers,
+            try {
+                const updatedGuest = await updateRSVPAndRelatedReservations(invitationId, updateFields, updateOperation, coupleId);
+                if (!updatedGuest) {
+                    return {
+                        statusCode: 404,
+                        headers,
                     body: JSON.stringify({ error: 'Guest not found' })
+                        };
+                    }
+                    return {
+                        statusCode: 200,
+                        headers,
+                        body: JSON.stringify({ 
+                            message: 'Nobody attending for invitation ' + invitationId + 'lodging and transportation also deleted' 
+                        })
+                    };
+            }
+            catch (error) {
+                console.error('Error:', error);
+                return {
+                    statusCode: 500,
+                    headers,
+                    body: JSON.stringify({ error: 'Internal server error' })
                 };
             }
-
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify(updatedGuest)
-            };
-        }
-
         // Handle unsupported HTTP methods
+        }
         return {
             statusCode: 405,
             headers,
