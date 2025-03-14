@@ -51,7 +51,7 @@ Retrieves guest information using their invitation ID.
 
 **Sample Request:**
 ```
-GET /wedding_rsvp?invitationId=INV001
+GET /rsvp/INV001
 ```
 
 **Sample Response:**

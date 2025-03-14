@@ -24,7 +24,9 @@
         "func-names": "off",
         "no-plusplus": "off",
         "import/prefer-default-export": "off",
-        "max-classes-per-file": "off"
+        "max-classes-per-file": "off",
+        "import/no-unresolved": "off",
+        "prefer-destructuring": "off"
     },
     "ignorePatterns": ["node_modules/**"]
 }
