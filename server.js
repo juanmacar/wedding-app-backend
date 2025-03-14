@@ -41,6 +41,18 @@ const startServer = async () => {
     await initializeDatabase();
     console.log('Connected to MongoDB and initialized database');
 
+    // Root route
+    app.get('/', (req, res) => {
+      res.json({
+        message: 'Wedding App API is running',
+        endpoints: [
+          '/api/rsvp',
+          '/api/lodging',
+          '/api/transportation'
+        ]
+      });
+    });
+
     // Routes
     app.use('/api/rsvp', rsvpRoutes);
     app.use('/api/lodging', lodgingRoutes);
