@@ -19,7 +19,7 @@
         "comma-dangle": ["error", "only-multiline"],
         "consistent-return": "warn",
         "no-shadow": "warn",
-        "no-nested-ternary": "warn",
+        "no-nested-ternary": "off",
         "no-lonely-if": "warn",
         "func-names": "off",
         "no-plusplus": "off",

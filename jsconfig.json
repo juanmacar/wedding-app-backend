@@ -4,7 +4,7 @@
     "moduleResolution": "NodeNext",
     "target": "ES2020",
     "baseUrl": ".",
-    "checkJs": true
+    "checkJs": false
   },
   "exclude": ["node_modules", "**/node_modules/*", "functions/**"]
 }
