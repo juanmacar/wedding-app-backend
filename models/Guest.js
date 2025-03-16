@@ -7,6 +7,11 @@ const guestSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  wedding: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Wedding',
+    required: true
+  },
   type: {
     type: String,
     required: true,

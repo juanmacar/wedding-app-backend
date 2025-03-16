@@ -22,39 +22,257 @@ A Node.js Express API built to manage wedding invitations. This API allows you t
    ```
    npm install
    ```
-3. Create a `.env` file based on `.env.example` and add your MongoDB connection string
-4. Start the server:
-   ```
-   npm start
-   ```
-   Or for development with auto-reload:
-   ```
-   npm run dev
-   ```
-5. The server will start on the port specified in your `.env` file (default: 3000)
+3. Create a `.env` based on the .env.example file:
 
-## Deployment on Render
+## Database Schemas
 
-### Prerequisites for Render Deployment
+### User Schema
+```javascript
+{
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  isVenue: {
+    type: Boolean,
+    default: false
+  },
+  weddings: [{
+    type: ObjectId,
+    ref: 'Wedding'
+  }],
+  timestamps: true
+}
+```
 
-- A Render account
-- Your project pushed to a Git repository (GitHub, GitLab, etc.)
+### Wedding Schema
+```javascript
+{
+  weddingDate: {
+    type: Date,
+    required: false
+  },
+  weddingName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  users: [{
+    type: ObjectId,
+    ref: 'User',
+    required: true
+  }],
+  venue: {
+    type: String,
+    trim: true
+  },
+  theme: {
+    type: String,
+    trim: true
+  },
+  settings: {
+    type: Mixed,
+    default: {}
+  },
+  timestamps: true
+}
+```
 
-### Deployment Steps
+### Guest Schema
+```javascript
+{
+  invitationId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  wedding: {
+    type: ObjectId,
+    ref: 'Wedding',
+    required: true
+  },
+  type: {
+    type: String,
+    required: true,
+    enum: ['single', 'couple', 'family']
+  },
+  mainGuest: {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    phone: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    attending: {
+      type: Boolean,
+      default: null
+    }
+  },
+  hasCompanion: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  companion: {
+    name: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    attending: {
+      type: Boolean,
+      default: null
+    }
+  },
+  hasChildren: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  children: [{
+    name: {
+      type: String,
+      trim: true
+    },
+    attending: {
+      type: Boolean,
+      default: null
+    }
+  }],
+  dietaryRestrictionsInGroup: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  songRequest: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  additionalNotes: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    required: true
+  },
+  lastModified: {
+    type: Date,
+    default: null
+  }
+}
+```
 
-1. Log in to your Render dashboard
-2. Click on 'New' and select 'Web Service'
-3. Connect your Git repository
-4. Configure the service:
-   - Name: wedding-app-backend (or your preferred name)
-   - Environment: Node
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-5. Add environment variables:
-   - Add your `MONGODB_URI` and any other required environment variables
-6. Click 'Create Web Service'
+### Lodging Reservation Schema
+```javascript
+{
+  invitationId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  guests: {
+    type: Array,
+    required: true
+  },
+  adults: {
+    type: Number,
+    required: false
+  },
+  children: {
+    type: Number,
+    required: false
+  }
+}
+```
 
-The deployment should now work correctly with the added `render.yaml` and `Procfile` in your repository.
+### Transportation Reservation Schema
+```javascript
+{
+  invitationId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  guests: {
+    type: Array,
+    required: true
+  },
+  adults: {
+    type: Number,
+    required: false
+  },
+  children: {
+    type: Number,
+    required: false
+  }
+}
+```
+
+### Lodging Availability Schema
+```javascript
+{
+  coupleId: {
+    type: String,
+    required: true
+  },
+  total_spots: {
+    type: Number,
+    required: true
+  },
+  taken_spots: {
+    type: Number,
+    required: true
+  }
+}
+```
+
+### Transportation Availability Schema
+```javascript
+{
+  coupleId: {
+    type: String,
+    required: true
+  },
+  total_spots: {
+    type: Number,
+    required: true
+  },
+  taken_spots: {
+    type: Number,
+    required: true
+  }
+}
+```
+
+## Testing
+
+Use the provided test script to verify database connectivity and some basic CRUD operations:
+
+```bash
+npm run test:rsvp
+```
 
 # Wedding RSVP API
 
@@ -402,11 +620,8 @@ All error responses include a message and optional error details:
    ```bash
    npm install
    ```
-3. Create a `.env` file with your MongoDB connection string:
-   ```
-   MONGODB_URI="your-mongodb-connection-string"
-   ```
-4. Deploy to AWS Lambda using your preferred method (SAM, Serverless Framework, or manual upload)
+3. Create a `.env` based on the .env.example file:
+
 
 ## Testing
 
@@ -444,3 +659,161 @@ The transportation reservation schema includes fields for managing:
 - Timestamps (created and modified)
 
 See `models/Guest.js` for the complete schema definition.
+
+# Authentication API
+
+The Authentication API allows users to register and log in to manage their wedding details.
+
+## API Endpoints
+
+The API is accessible through the base URL: `http://localhost:3001/api/auth` (or your deployed Render URL)
+
+## Available Methods
+
+### POST /api/auth/signup
+
+Registers a new user and creates or joins a wedding.
+
+**Request Body:**
+```json
+{
+  "email": "couple@example.com",
+  "password": "securepassword123",
+  "weddingId": "60d21b4667d0d8992e610c85",  // Optional: to join an existing wedding
+  "weddingName": "John & Jane's Wedding"    // Optional: used if creating a new wedding
+}
+```
+
+**Required Fields:**
+- `email` (string): Valid email address
+- `password` (string): User password
+
+**Optional Fields:**
+- `weddingId` (string): ID of an existing wedding to join
+- `weddingName` (string): Name for a new wedding if not joining an existing one
+
+**Success Response (201):**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "_id": "60d21b4667d0d8992e610c86",
+    "email": "couple@example.com",
+    "isAdmin": false,
+    "isVenue": false,
+    "createdAt": "2023-06-22T15:30:45.123Z",
+    "weddings": [
+      {
+        "_id": "60d21b4667d0d8992e610c87",
+        "weddingName": "John & Jane's Wedding",
+        "users": ["60d21b4667d0d8992e610c86"]
+      }
+    ]
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing required fields
+- `409 Conflict`: User already exists
+- `500 Internal Server Error`: Server error
+
+### POST /api/auth/login
+
+Authenticates a user and returns a JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "couple@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Required Fields:**
+- `email` (string): User's email address
+- `password` (string): User's password
+
+**Success Response (200):**
+```json
+{
+  "_id": "60d21b4667d0d8992e610c86",
+  "email": "couple@example.com",
+  "isAdmin": false,
+  "isVenue": false,
+  "weddings": [
+    {
+      "_id": "60d21b4667d0d8992e610c87",
+      "weddingName": "John & Jane's Wedding",
+      "users": ["60d21b4667d0d8992e610c86"]
+    }
+  ],
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing required fields
+- `401 Unauthorized`: Invalid email or password
+- `500 Internal Server Error`: Server error
+
+# Guests API
+
+The Guests API allows wedding organizers to manage their guest list.
+
+## API Endpoints
+
+The API is accessible through the base URL: `http://localhost:3001/api/guests` (or your deployed Render URL)
+
+## Available Methods
+
+### GET /api/guests/:weddingId
+
+Retrieves all guests for a specific wedding.
+
+**Path Parameters:**
+- `weddingId` (required): The ID of the wedding
+
+**Headers:**
+- `Authorization`: Bearer [JWT token]
+
+**Success Response (200):**
+```json
+[
+  {
+    "_id": "60d21b4667d0d8992e610c88",
+    "invitationId": "INV001",
+    "wedding": "60d21b4667d0d8992e610c87",
+    "type": "family",
+    "mainGuest": {
+      "name": "John Doe",
+      "phone": "1234567890",
+      "attending": true
+    },
+    "hasCompanion": true,
+    "companion": {
+      "name": "Jane Doe",
+      "attending": true
+    },
+    "hasChildren": true,
+    "children": [
+      {
+        "name": "Child Doe",
+        "attending": true
+      }
+    ],
+    "dietaryRestrictionsInGroup": "No nuts",
+    "songRequest": "Dancing Queen",
+    "additionalNotes": "Looking forward to it!",
+    "createdAt": "2023-06-22T15:35:45.123Z",
+    "lastModified": "2023-06-22T15:35:45.123Z"
+  }
+]
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing wedding ID
+- `403 Forbidden`: Not authorized to view guests for this wedding
+- `404 Not Found`: Wedding not found
+- `500 Internal Server Error`: Server error

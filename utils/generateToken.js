@@ -9,7 +9,7 @@ const generateToken = (user) => {
   // Create payload with user data (excluding sensitive information)
   const payload = {
     id: user._id,
-    username: user.username,
+    email: user.email,
     isAdmin: user.isAdmin,
     isVenue: user.isVenue
   };

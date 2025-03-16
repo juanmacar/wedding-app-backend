@@ -4,17 +4,19 @@ import TransportationReservation from '../models/TransportationReservation.js';
 import LodgingAvailability from '../models/LodgingAvailability.js';
 import TransportationAvailability from '../models/TransportationAvailability.js';
 import User from '../models/User.js';
+import Wedding from '../models/Wedding.js';
 
 const totalLodgingSpots = 70;
 const totalTransportationSpots = 70;
 const coupleId = '0001';
 export const initializeDatabase = async () => {
   try {
-    // Initialize collections by making a simple query to  create the collections if they don't exist
+    // Initialize collections by making a simple query to create the collections if they don't exist
     await Guest.findOne({});
     await LodgingReservation.findOne({});
     await TransportationReservation.findOne({});
     await User.findOne({});
+    await Wedding.findOne({});
     console.log('Collections initialized successfully');
 
     // Check if the availability document exists
@@ -43,25 +45,24 @@ export const initializeDatabase = async () => {
     }
 
     // Check if admin user exists and create one if environment variables are set
-    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
-    
-    if (adminUsername && adminPassword) {
-      const adminExists = await User.findOne({ username: adminUsername, isAdmin: true });
-      
+    if (adminEmail && adminPassword) {
+      const adminExists = await User.findOne({ email: adminEmail, isAdmin: true });
+
       if (!adminExists) {
         const adminUser = new User({
-          username: adminUsername,
+          email: adminEmail,
           password: adminPassword,
           isAdmin: true,
           isVenue: false
         });
-        
+
         await adminUser.save();
         console.log('Created admin user');
       }
     }
-    
+
     console.log('Database initialization completed successfully');
   } catch (error) {
     console.error('Error initializing database:', error);

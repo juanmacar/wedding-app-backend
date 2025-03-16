@@ -10,6 +10,8 @@ import rsvpRoutes from './routes/rsvp.js';
 import lodgingRoutes from './routes/lodging.js';
 import transportationRoutes from './routes/transportation.js';
 import authRoutes from './routes/auth.js';
+import weddingsRoutes from './routes/weddings.js';
+import guestsRoutes from './routes/guests.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -50,7 +52,9 @@ const startServer = async () => {
           '/api/rsvp',
           '/api/lodging',
           '/api/transportation',
-          '/api/auth'
+          '/api/auth',
+          '/api/weddings',
+          '/api/guests'
         ]
       });
     });
@@ -60,6 +64,8 @@ const startServer = async () => {
     app.use('/api/lodging', lodgingRoutes);
     app.use('/api/transportation', transportationRoutes);
     app.use('/api/auth', authRoutes);
+    app.use('/api/weddings', weddingsRoutes);
+    app.use('/api/guests', guestsRoutes);
 
     // Error handling middleware
     app.use(notFound);

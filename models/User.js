@@ -3,11 +3,13 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    email: {
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
+      lowercase: true,
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email address']
     },
     password: {
       type: String,
@@ -20,7 +22,11 @@ const userSchema = new mongoose.Schema(
     isVenue: {
       type: Boolean,
       default: false
-    }
+    },
+    weddings: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Wedding'
+    }]
   },
   {
     timestamps: true
@@ -32,7 +38,6 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
-  
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
