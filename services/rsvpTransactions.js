@@ -2,6 +2,8 @@
 import mongoose from 'mongoose';
 import LodgingReservation from '../models/LodgingReservation.js';
 import LodgingAvailability from '../models/LodgingAvailability.js';
+import TransportationReservation from '../models/TransportationReservation.js';
+import TransportationAvailability from '../models/TransportationAvailability.js';
 import Guest from '../models/Guest.js';
 import { RSVPError, LodgingError } from './errors.js';
 
@@ -11,22 +13,39 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
     console.log('Nobody attending');
     try {
       const lodgingReservation = await LodgingReservation.findOne({ invitationId });
-      if (lodgingReservation) {
+      const transportationReservation = await TransportationReservation.findOne({ invitationId });
+      if (lodgingReservation || transportationReservation) {
         const session = await mongoose.startSession();
         try {
           session.startTransaction();
-          const releasedSpots = lodgingReservation.adults + lodgingReservation.children;
-          const updatedAvailability = await LodgingAvailability.findOneAndUpdate(
-            { coupleId },
-            { $inc: { taken_spots: -releasedSpots } },
-            { new: true, session }
-          );
-          if (!updatedAvailability) {
-            throw new LodgingError('Failed to update availability', 500);
+          if (lodgingReservation) {
+            const releasedLodgingSpots = lodgingReservation.adults + lodgingReservation.children;
+            const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
+              { coupleId },
+              { $inc: { taken_spots: -releasedLodgingSpots } },
+              { new: true, session }
+            );
+            if (!updatedLodgingAvailability) {
+              throw new LodgingError('Failed to update availability', 500);
+            }
+            // Delete the lodging reservation
+            await lodgingReservation.deleteOne({ session });
+            console.log('Nobody attending, lodging reservation deleted');
           }
-          // Delete the reservation
-          await lodgingReservation.deleteOne({ session });
-          console.log('Nobody attending, lodging reservation deleted');
+          if (transportationReservation) {
+            const releasedTransportationSpots = transportationReservation.adults + transportationReservation.children;
+            const updatedTransportationAvailability = await TransportationAvailability.findOneAndUpdate(
+              { coupleId },
+              { $inc: { taken_spots: -releasedTransportationSpots } },
+              { new: true, session }
+            );
+            if (!updatedTransportationAvailability) {
+              throw new LodgingError('Failed to update availability', 500);
+            }
+            // Delete the transportation reservation
+            await transportationReservation.deleteOne({ session });
+            console.log('Nobody attending, transportation reservation deleted');
+          }
           const updatedGuest = await Guest.findOneAndUpdate(
             { invitationId },
             updateOperation,
