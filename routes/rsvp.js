@@ -11,7 +11,7 @@ router.get('/:invitationId?', async (req, res) => {
     console.log('GET /rsvp request received');
     console.log('URL parameters:', req.params);
     console.log('Headers:', req.headers);
-    
+
     const { invitationId } = req.params;
     console.log('Extracted invitationId:', invitationId);
 

@@ -9,6 +9,7 @@ import { initializeDatabase } from './utils/dbInit.js';
 import rsvpRoutes from './routes/rsvp.js';
 import lodgingRoutes from './routes/lodging.js';
 import transportationRoutes from './routes/transportation.js';
+import authRoutes from './routes/auth.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -48,7 +49,8 @@ const startServer = async () => {
         endpoints: [
           '/api/rsvp',
           '/api/lodging',
-          '/api/transportation'
+          '/api/transportation',
+          '/api/auth'
         ]
       });
     });
@@ -57,6 +59,7 @@ const startServer = async () => {
     app.use('/api/rsvp', rsvpRoutes);
     app.use('/api/lodging', lodgingRoutes);
     app.use('/api/transportation', transportationRoutes);
+    app.use('/api/auth', authRoutes);
 
     // Error handling middleware
     app.use(notFound);
