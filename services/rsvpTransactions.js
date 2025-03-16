@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import mongoose from 'mongoose';
 import LodgingReservation from '../models/LodgingReservation.js';
 import LodgingAvailability from '../models/LodgingAvailability.js';
