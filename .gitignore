@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
@@ -11,10 +10,6 @@ package-lock.json
 dist/
 build/
 .aws-sam/
-
-# Lambda deployment packages
-*.zip
-function.zip
 
 # IDE and editor files
 .idea/
