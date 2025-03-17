@@ -6,7 +6,6 @@ import { connectToDatabase } from './utils/db.js';
 import { initializeDatabase } from './utils/dbInit.js';
 
 // Import routes
-import rsvpRoutes from './routes/rsvp.js';
 import lodgingRoutes from './routes/lodging.js';
 import transportationRoutes from './routes/transportation.js';
 import authRoutes from './routes/auth.js';
@@ -49,23 +48,21 @@ const startServer = async () => {
       res.json({
         message: 'Wedding App API is running',
         endpoints: [
-          '/api/rsvp',
+          '/api/guests',
           '/api/lodging',
           '/api/transportation',
           '/api/auth',
-          '/api/weddings',
-          '/api/guests'
+          '/api/weddings'
         ]
       });
     });
 
     // Routes
-    app.use('/api/rsvp', rsvpRoutes);
+    app.use('/api/guests', guestsRoutes);
     app.use('/api/lodging', lodgingRoutes);
     app.use('/api/transportation', transportationRoutes);
     app.use('/api/auth', authRoutes);
     app.use('/api/weddings', weddingsRoutes);
-    app.use('/api/guests', guestsRoutes);
 
     // Error handling middleware
     app.use(notFound);

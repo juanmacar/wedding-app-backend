@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 
 const LodgingAvailabilitySchema = new mongoose.Schema({
-  coupleId: {
-    type: String,
+  weddingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Wedding',
     required: true
   },
   total_spots: {

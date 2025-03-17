@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const guestSchema = new mongoose.Schema({
   invitationId: {
     type: String,
-    required: true,
+    required: false,
     unique: true,
     trim: true
   },

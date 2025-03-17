@@ -6,13 +6,23 @@ import TransportationAvailability from '../models/TransportationAvailability.js'
 import Guest from '../models/Guest.js';
 import { RSVPError, LodgingError } from './errors.js';
 
-export const updateRSVPAndRelatedReservations = async (invitationId, updateFields, updateOperation, coupleId) => {
+export const updateRSVPAndRelatedReservations = async (guestId, updateFields, updateOperation) => {
   const allAttendees = [updateFields.mainGuest, updateFields.companion, ...(updateFields.children || [])].filter(Boolean);
   if (allAttendees.every((attendee) => attendee.attending === false)) {
     console.log('Nobody attending');
     try {
-      const lodgingReservation = await LodgingReservation.findOne({ invitationId });
-      const transportationReservation = await TransportationReservation.findOne({ invitationId });
+      // First, get the guest to retrieve the wedding ID
+      const guest = await Guest.findById(guestId);
+      if (!guest) {
+        throw new RSVPError('Guest not found', 404);
+      }
+
+      const weddingId = guest.wedding.toString();
+
+      // Find reservations using the guest's _id as the invitationId
+      const lodgingReservation = await LodgingReservation.findOne({ invitationId: guestId });
+      const transportationReservation = await TransportationReservation.findOne({ invitationId: guestId });
+
       if (lodgingReservation || transportationReservation) {
         const session = await mongoose.startSession();
         try {
@@ -20,7 +30,7 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
           if (lodgingReservation) {
             const releasedLodgingSpots = lodgingReservation.adults + lodgingReservation.children;
             const updatedLodgingAvailability = await LodgingAvailability.findOneAndUpdate(
-              { coupleId },
+              { weddingId },
               { $inc: { taken_spots: -releasedLodgingSpots } },
               { new: true, session }
             );
@@ -34,7 +44,7 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
           if (transportationReservation) {
             const releasedTransportationSpots = transportationReservation.adults + transportationReservation.children;
             const updatedTransportationAvailability = await TransportationAvailability.findOneAndUpdate(
-              { coupleId },
+              { weddingId },
               { $inc: { taken_spots: -releasedTransportationSpots } },
               { new: true, session }
             );
@@ -45,8 +55,9 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
             await transportationReservation.deleteOne({ session });
             console.log('Nobody attending, transportation reservation deleted');
           }
-          const updatedGuest = await Guest.findOneAndUpdate(
-            { invitationId },
+          // Update the guest using its _id
+          const updatedGuest = await Guest.findByIdAndUpdate(
+            guestId,
             updateOperation,
             { new: true, runValidators: false, session }
           );
@@ -59,8 +70,9 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
           throw new RSVPError('Ocurrió un error al actualizar la RSVP y borrar la reserva de alojamiento', 500);
         }
       }
-      const updatedGuest = await Guest.findOneAndUpdate(
-        { invitationId },
+      // If no reservations exist, just update the guest
+      const updatedGuest = await Guest.findByIdAndUpdate(
+        guestId,
         updateOperation,
         { new: true, runValidators: false }
       );
@@ -72,9 +84,9 @@ export const updateRSVPAndRelatedReservations = async (invitationId, updateField
     // At least one attendee is attending
     console.log('At least one attendee is attending');
     try {
-      // Just update the guest RSVP information
-      const updatedGuest = await Guest.findOneAndUpdate(
-        { invitationId },
+      // Just update the guest RSVP information using its _id
+      const updatedGuest = await Guest.findByIdAndUpdate(
+        guestId,
         updateOperation,
         { new: true, runValidators: false }
       );
