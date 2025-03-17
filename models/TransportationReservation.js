@@ -2,10 +2,10 @@ import mongoose from 'mongoose';
 
 const TransportationReservationSchema = new mongoose.Schema({
   invitationId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Guest',
     required: true,
-    unique: true,
-    trim: true
+    unique: true
   },
   guests: {
     type: Array,

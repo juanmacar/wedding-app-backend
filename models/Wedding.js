@@ -27,6 +27,62 @@ const weddingSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Lodging information
+  lodging: {
+    totalSpots: {
+      type: Number,
+      default: 0
+    },
+    takenSpots: {
+      type: Number,
+      default: 0
+    },
+    // For future implementation - room distribution
+    rooms: [{
+      name: {
+        type: String,
+        trim: true
+      },
+      capacity: {
+        type: Number
+      },
+      quantity: {
+        type: Number
+      },
+      description: {
+        type: String,
+        trim: true
+      }
+    }]
+  },
+  // Transportation information
+  transportation: {
+    totalSpots: {
+      type: Number,
+      default: 0
+    },
+    takenSpots: {
+      type: Number,
+      default: 0
+    },
+    // For future implementation - transportation options
+    options: [{
+      name: {
+        type: String,
+        trim: true
+      },
+      capacity: {
+        type: Number
+      },
+      quantity: {
+        type: Number
+      },
+      description: {
+        type: String,
+        trim: true
+      }
+    }]
+  },
   // Any additional settings or preferences
   settings: {
     type: mongoose.Schema.Types.Mixed,

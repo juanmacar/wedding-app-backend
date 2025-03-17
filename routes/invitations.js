@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Guest from '../models/Guest.js';
+import Invitation from '../models/Invitation.js';
 import Wedding from '../models/Wedding.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { updateRSVPAndRelatedReservations } from '../services/rsvpTransactions.js';
@@ -36,9 +36,9 @@ router.get('/wedding/:weddingId', protect, async (req, res) => {
     }
 
     // Find all guests for this wedding
-    const guests = await Guest.find({ wedding: new mongoose.Types.ObjectId(weddingId) });
+    const invitations = await Invitation.find({ weddingId: new mongoose.Types.ObjectId(weddingId) });
 
-    return res.status(200).json(guests);
+    return res.status(200).json(invitations);
   } catch (error) {
     console.error('Error in GET /api/guests/wedding/:weddingId:', error);
     return res.status(500).json({
@@ -66,13 +66,13 @@ router.get('/invitation/:invitationId', async (req, res) => {
     }
 
     // Use _id directly as the invitationId
-    const guest = await Guest.findById(invitationId);
-    if (!guest) {
+    const invitation = await Invitation.findById(invitationId);
+    if (!invitation) {
       return res.status(404).json({ error: `Guest not found with invitation ID ${invitationId}` });
     }
 
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json(guest);
+    return res.status(200).json(invitation);
   } catch (error) {
     console.error('Error in GET /api/guests/invitation/:invitationId:', error);
     return res.status(500).json({ error: 'An error occurred while fetching guest' });
@@ -112,8 +112,8 @@ router.post('/invitation', protect, async (req, res) => {
     }
 
     // Create the guest - MongoDB will automatically generate _id which we'll use as invitationId
-    const guest = new Guest({
-      wedding: new mongoose.Types.ObjectId(weddingId),
+    const newInvitation = new Invitation({
+      weddingId: new mongoose.Types.ObjectId(weddingId),
       type,
       mainGuest,
       hasCompanion: hasCompanion || false,
@@ -122,9 +122,9 @@ router.post('/invitation', protect, async (req, res) => {
       children: children || []
     });
 
-    await guest.save();
+    const savedInvitation = await newInvitation.save();
 
-    return res.status(201).json(guest);
+    return res.status(201).json(savedInvitation);
   } catch (error) {
     console.error('Error in POST /api/guests/invitation:', error);
     return res.status(500).json({
@@ -152,8 +152,8 @@ router.put('/invitation/:invitationId', async (req, res) => {
 
     // First, get the current document to check for null fields
     // Use _id directly as the invitationId
-    const currentGuest = await Guest.findById(invitationId);
-    if (!currentGuest) {
+    const currentInvitation = await Invitation.findById(invitationId);
+    if (!currentInvitation) {
       return res.status(404).json({ error: 'Guest not found' });
     }
 
@@ -197,22 +197,22 @@ router.put('/invitation/:invitationId', async (req, res) => {
     };
 
     // Process all update fields
-    processObject(updateFields, '', currentGuest);
+    processObject(updateFields, '', currentInvitation);
 
     console.log('Request body:', JSON.stringify(updateFields, null, 2));
-    console.log('Current document:', JSON.stringify(currentGuest, null, 2));
+    console.log('Current document:', JSON.stringify(currentInvitation, null, 2));
     console.log('Update operation:', JSON.stringify(updateOperation, null, 2));
 
     // Find and update the guest
     try {
       // Use _id directly as the invitationId for the update function
-      const updatedGuest = await updateRSVPAndRelatedReservations(invitationId, updateFields, updateOperation);
-      if (!updatedGuest) {
+      const updatedInvitation = await updateRSVPAndRelatedReservations(invitationId, updateFields, updateOperation);
+      if (!updatedInvitation) {
         return res.status(404).json({ error: 'Guest not found' });
       }
       return res.status(200).json({
         message: 'Guest updated successfully',
-        guest: updatedGuest
+        guest: updatedInvitation
       });
     } catch (error) {
       console.error('Error updating guest:', error);

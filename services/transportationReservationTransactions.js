@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import TransportationReservation from '../models/TransportationReservation.js';
-import TransportationAvailability from '../models/TransportationAvailability.js';
+import Wedding from '../models/Wedding.js';
 
 class TransportationError extends Error {
   constructor(message, statusCode) {
@@ -9,27 +9,28 @@ class TransportationError extends Error {
   }
 }
 
-export async function updateReservationAndAvailability(invitationId, reservationData, coupleId, spotsDiff) {
+export async function updateReservationAndAvailability(invitationId, reservationData, weddingId, spotsDiff) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
-    const updatedAvailability = await TransportationAvailability.findOneAndUpdate(
+    // Update the wedding document's transportation availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
       {
-        coupleId,
+        _id: weddingId,
         $expr: {
           $lte: [
-            { $add: ['$taken_spots', spotsDiff] },
-            '$total_spots'
+            { $add: ['$transportation.takenSpots', spotsDiff] },
+            '$transportation.totalSpots'
           ]
         }
       },
-      { $inc: { taken_spots: spotsDiff } },
+      { $inc: { 'transportation.takenSpots': spotsDiff } },
       { new: true, session }
     );
 
-    if (!updatedAvailability) {
-      throw new TransportationError('Not enough spots available', 409);
+    if (!updatedWedding) {
+      throw new TransportationError('Not enough transportation spots available', 409);
     }
 
     const updatedReservation = await TransportationReservation.findOneAndUpdate(
@@ -39,7 +40,13 @@ export async function updateReservationAndAvailability(invitationId, reservation
     );
 
     await session.commitTransaction();
-    return { updatedReservation, updatedAvailability };
+    return {
+      updatedReservation,
+      updatedAvailability: {
+        total_spots: updatedWedding.transportation.totalSpots,
+        taken_spots: updatedWedding.transportation.takenSpots
+      }
+    };
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof TransportationError) {
@@ -51,34 +58,88 @@ export async function updateReservationAndAvailability(invitationId, reservation
   }
 }
 
-export async function createReservationAndUpdateAvailability(reservationData, coupleId, requiredSpots) {
+export async function createReservationAndUpdateAvailability(reservationData, weddingId, requiredSpots) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
-    const updatedAvailability = await TransportationAvailability.findOneAndUpdate(
+    // Update the wedding document's transportation availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
       {
-        coupleId,
+        _id: weddingId,
         $expr: {
           $lte: [
-            { $add: ['$taken_spots', requiredSpots] },
-            '$total_spots'
+            { $add: ['$transportation.takenSpots', requiredSpots] },
+            '$transportation.totalSpots'
           ]
         }
       },
-      { $inc: { taken_spots: requiredSpots } },
+      { $inc: { 'transportation.takenSpots': requiredSpots } },
       { new: true, session }
     );
 
-    if (!updatedAvailability) {
-      throw new TransportationError('Not enough spots available', 409);
+    if (!updatedWedding) {
+      throw new TransportationError('Not enough transportation spots available', 409);
     }
 
     const newReservation = new TransportationReservation(reservationData);
     await newReservation.save({ session });
 
     await session.commitTransaction();
-    return { newReservation, updatedAvailability };
+    return {
+      newReservation,
+      updatedAvailability: {
+        total_spots: updatedWedding.transportation.totalSpots,
+        taken_spots: updatedWedding.transportation.takenSpots
+      }
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    if (error instanceof TransportationError) {
+      throw error;
+    }
+    throw new TransportationError(error.message, 500);
+  } finally {
+    session.endSession();
+  }
+}
+
+export async function deleteReservationAndUpdateAvailability(invitationId, weddingId) {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    // Find the reservation first to get the number of spots to release
+    const transportationReservation = await TransportationReservation.findOne({ invitationId }).session(session);
+    if (!transportationReservation) {
+      throw new TransportationError('Transportation Reservation not found', 404);
+    }
+
+    const releasedSpots = transportationReservation.adults + transportationReservation.children;
+
+    // Update the wedding document's transportation availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
+      { _id: weddingId },
+      { $inc: { 'transportation.takenSpots': -releasedSpots } },
+      { new: true, session }
+    );
+
+    if (!updatedWedding) {
+      throw new TransportationError('Failed to update transportation availability', 500);
+    }
+
+    // Delete the reservation
+    await transportationReservation.deleteOne({ session });
+
+    await session.commitTransaction();
+    return {
+      message: 'Transportation Reservation deleted successfully',
+      releasedSpots,
+      updatedAvailability: {
+        total_spots: updatedWedding.transportation.totalSpots,
+        taken_spots: updatedWedding.transportation.takenSpots
+      }
+    };
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof TransportationError) {

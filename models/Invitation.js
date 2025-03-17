@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
-const guestSchema = new mongoose.Schema({
+const invitationSchema = new mongoose.Schema({
   invitationId: {
     type: String,
     required: false,
     unique: true,
     trim: true
   },
-  wedding: {
+  weddingId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Wedding',
     required: true
@@ -88,14 +88,14 @@ const guestSchema = new mongoose.Schema({
     type: Date,
     default: null
   }
-}, { collection: 'guests' });
+}, { collection: 'invitations' });
 
 // Middleware to update lastModified on every save
-guestSchema.pre('save', function (next) {
+invitationSchema.pre('save', function (next) {
   this.lastModified = new Date();
   next();
 });
 
-const Guest = mongoose.model('Guest', guestSchema);
+const Invitation = mongoose.model('Invitation', invitationSchema);
 
-export default Guest;
+export default Invitation;

@@ -20,7 +20,7 @@
         "consistent-return": "warn",
         "no-shadow": "warn",
         "no-nested-ternary": "off",
-        "no-lonely-if": "warn",
+        "no-lonely-if": "off",
         "func-names": "off",
         "no-plusplus": "off",
         "import/prefer-default-export": "off",

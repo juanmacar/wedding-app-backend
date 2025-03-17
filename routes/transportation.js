@@ -1,13 +1,51 @@
 import express from 'express';
+import Invitation from '../models/Invitation.js';
 import TransportationReservation from '../models/TransportationReservation.js';
-import TransportationAvailability from '../models/TransportationAvailability.js';
+import Wedding from '../models/Wedding.js';
 import {
   updateReservationAndAvailability,
-  createReservationAndUpdateAvailability
+  createReservationAndUpdateAvailability,
+  deleteReservationAndUpdateAvailability
 } from '../services/transportationReservationTransactions.js';
 
 const router = express.Router();
-const coupleId = '0001';
+
+// Get transportation availability using invitationId
+router.get('/availability/:invitationId', async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+
+    if (!invitationId) {
+      return res.status(400).json({ error: 'invitationId is required' });
+    }
+
+    // Find the invitation to get the weddingId
+    const invitation = await Invitation.findById(invitationId);
+    if (!invitation) {
+      return res.status(404).json({ error: `Invitation not found with ID ${invitationId}` });
+    }
+
+    const weddingId = invitation.weddingId;
+
+    // Get the wedding to check transportation availability
+    const wedding = await Wedding.findById(weddingId);
+    if (!wedding) {
+      return res.status(404).json({ error: 'Wedding not found' });
+    }
+
+    if (!wedding.transportation) {
+      return res.status(404).json({ error: 'Transportation not available for this wedding' });
+    }
+
+    // Return just the availability information
+    return res.status(200).json(
+      wedding.transportation
+    );
+  } catch (error) {
+    console.error('Error getting transportation availability:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Get transportation availability or reservation by invitation ID
 router.get('/:invitationId?', async (req, res) => {
@@ -15,16 +53,34 @@ router.get('/:invitationId?', async (req, res) => {
     const { invitationId } = req.params;
 
     if (!invitationId) {
-      const availability = await TransportationAvailability.findOne({ coupleId });
-      return res.status(200).json(availability);
+      // This branch seems incomplete - we need weddingId to get availability
+      return res.status(400).json({ error: 'invitationId is required' });
     }
 
+    const invitation = await Invitation.findById(invitationId);
+    if (!invitation) {
+      return res.status(404).json({ error: `Invitation not found with ID ${invitationId}` });
+    }
+
+    const weddingId = invitation.weddingId;
+
+    // First check if there's a reservation for this invitation
     const transportationReservation = await TransportationReservation.findOne({ invitationId });
-    if (!transportationReservation) {
-      return res.status(404).json({ error: `Transportation Reservation not found with invitation ID ${invitationId}` });
+
+    // Get the wedding to check transportation availability
+    const wedding = await Wedding.findById(weddingId);
+    if (!wedding) {
+      return res.status(404).json({ error: 'Wedding not found' });
     }
 
-    return res.status(200).json(transportationReservation);
+    // Return both reservation (if exists) and availability information
+    return res.status(200).json({
+      reservation: transportationReservation || null,
+      availability: {
+        total_spots: wedding.transportation.totalSpots,
+        taken_spots: wedding.transportation.takenSpots
+      }
+    });
   } catch (error) {
     console.error('Error in GET /transportation:', error);
     return res.status(500).json({ error: 'An error occurred while fetching transportation information' });
@@ -37,6 +93,9 @@ router.post('/:invitationId', async (req, res) => {
     const { invitationId } = req.params;
     const { body } = req;
     body.invitationId = invitationId;
+    const invitation = await Invitation.findById(invitationId);
+    console.log('invitation', invitation, 'invitationId', invitationId);
+    const weddingId = invitation.weddingId;
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
@@ -48,17 +107,18 @@ router.post('/:invitationId', async (req, res) => {
       return res.status(409).json({ error: 'Transportation Reservation with this invitationId already exists' });
     }
 
-    // Check if this couple offers transportation
-    const transportationExists = await TransportationAvailability.findOne({ coupleId });
-    if (!transportationExists) {
-      return res.status(404).json({ error: 'Transportation not found for this couple' });
+    // Check if this wedding has transportation configured
+    const wedding = await Wedding.findById(weddingId);
+    if (!wedding || wedding.transportation.totalSpots <= 0) {
+      console.log('weddingId', weddingId, 'wedding transportation not configured');
+      return res.status(404).json({ error: 'Transportation not configured for this wedding' });
     }
 
     // Create new transportation reservation
     const requiredSpots = body.adults + body.children;
 
     try {
-      const result = await createReservationAndUpdateAvailability(body, coupleId, requiredSpots);
+      const result = await createReservationAndUpdateAvailability(body, weddingId, requiredSpots);
       return res.status(201).json(result.newReservation);
     } catch (error) {
       return res.status(error.statusCode || 500).json({
@@ -76,6 +136,8 @@ router.put('/:invitationId', async (req, res) => {
   try {
     const { invitationId } = req.params;
     const { body } = req;
+    const invitation = await Invitation.findById(invitationId);
+    const weddingId = invitation.weddingId;
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
@@ -86,10 +148,10 @@ router.put('/:invitationId', async (req, res) => {
       return res.status(404).json({ error: `Transportation Reservation not found with invitation ID ${invitationId}` });
     }
 
-    // Check if this couple offers transportation
-    const transportationExists = await TransportationAvailability.findOne({ coupleId });
-    if (!transportationExists) {
-      return res.status(404).json({ error: 'Transportation not found for this couple' });
+    // Make sure the wedding exists for the transaction
+    const wedding = await Wedding.findById(weddingId);
+    if (!wedding) {
+      return res.status(404).json({ error: 'Wedding not found' });
     }
 
     // Update existing transportation reservation
@@ -98,7 +160,7 @@ router.put('/:invitationId', async (req, res) => {
     const spotsDiff = NewRequiredSpots - previousSpotsRequired;
 
     try {
-      const result = await updateReservationAndAvailability(invitationId, body, coupleId, spotsDiff);
+      const result = await updateReservationAndAvailability(invitationId, body, weddingId, spotsDiff);
       return res.status(200).json(result.updatedReservation);
     } catch (error) {
       return res.status(error.statusCode || 500).json({
@@ -115,31 +177,20 @@ router.put('/:invitationId', async (req, res) => {
 router.delete('/:invitationId', async (req, res) => {
   try {
     const { invitationId } = req.params;
-
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
     }
+
+    const invitation = await Invitation.findById(invitationId);
+    const weddingId = invitation.weddingId;
 
     const transportationReservation = await TransportationReservation.findOne({ invitationId });
     if (!transportationReservation) {
       return res.status(404).json({ error: `Transportation Reservation not found with invitation ID ${invitationId}` });
     }
 
-    const spotsToRelease = transportationReservation.adults + transportationReservation.children;
-
     try {
-      // Implement the delete function if it doesn't exist
-      // This function should be added to transportationReservationTransactions.js
-      // For now, we'll use a simple deleteOne operation
-      await TransportationReservation.deleteOne({ invitationId });
-
-      // Update availability
-      await TransportationAvailability.findOneAndUpdate(
-        { coupleId },
-        { $inc: { taken_spots: -spotsToRelease } },
-        { new: true }
-      );
-
+      await deleteReservationAndUpdateAvailability(invitationId, weddingId);
       return res.status(200).json({ message: 'Transportation reservation deleted successfully' });
     } catch (error) {
       return res.status(error.statusCode || 500).json({

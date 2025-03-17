@@ -10,7 +10,7 @@ import lodgingRoutes from './routes/lodging.js';
 import transportationRoutes from './routes/transportation.js';
 import authRoutes from './routes/auth.js';
 import weddingsRoutes from './routes/weddings.js';
-import guestsRoutes from './routes/guests.js';
+import invitationsRoutes from './routes/invitations.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -48,7 +48,7 @@ const startServer = async () => {
       res.json({
         message: 'Wedding App API is running',
         endpoints: [
-          '/api/guests',
+          '/api/invitations',
           '/api/lodging',
           '/api/transportation',
           '/api/auth',
@@ -58,7 +58,7 @@ const startServer = async () => {
     });
 
     // Routes
-    app.use('/api/guests', guestsRoutes);
+    app.use('/api/invitations', invitationsRoutes);
     app.use('/api/lodging', lodgingRoutes);
     app.use('/api/transportation', transportationRoutes);
     app.use('/api/auth', authRoutes);

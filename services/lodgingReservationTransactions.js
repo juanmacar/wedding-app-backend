@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import LodgingReservation from '../models/LodgingReservation.js';
-import LodgingAvailability from '../models/LodgingAvailability.js';
+import Wedding from '../models/Wedding.js';
 
 class LodgingError extends Error {
   constructor(message, statusCode) {
@@ -9,28 +9,31 @@ class LodgingError extends Error {
   }
 }
 
-export async function updateReservationAndAvailability(invitationId, reservationData, coupleId, spotsDiff) {
+export async function updateReservationAndAvailability(invitationId, reservationData, weddingId, spotsDiff) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
     console.log('spotsDiff:', spotsDiff);
-    const updatedAvailability = await LodgingAvailability.findOneAndUpdate(
+
+    // Update the wedding document's lodging availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
       {
-        coupleId,
+        _id: weddingId,
         $expr: {
           $lte: [
-            { $add: ['$taken_spots', spotsDiff] },
-            '$total_spots'
+            { $add: ['$lodging.takenSpots', spotsDiff] },
+            '$lodging.totalSpots'
           ]
         }
       },
-      { $inc: { taken_spots: spotsDiff } },
+      { $inc: { 'lodging.takenSpots': spotsDiff } },
       { new: true, session }
     );
-    console.log('updatedAvailability:', updatedAvailability);
 
-    if (!updatedAvailability) {
-      throw new LodgingError('Not enough spots available', 409);
+    console.log('updatedWedding lodging:', updatedWedding?.lodging);
+
+    if (!updatedWedding) {
+      throw new LodgingError('Not enough lodging spots available', 409);
     }
 
     const updatedReservation = await LodgingReservation.findOneAndUpdate(
@@ -40,7 +43,13 @@ export async function updateReservationAndAvailability(invitationId, reservation
     );
 
     await session.commitTransaction();
-    return { updatedReservation, updatedAvailability };
+    return {
+      updatedReservation,
+      updatedAvailability: {
+        total_spots: updatedWedding.lodging.totalSpots,
+        taken_spots: updatedWedding.lodging.takenSpots
+      }
+    };
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof LodgingError) {
@@ -52,34 +61,41 @@ export async function updateReservationAndAvailability(invitationId, reservation
   }
 }
 
-export async function createReservationAndUpdateAvailability(reservationData, coupleId, requiredSpots) {
+export async function createReservationAndUpdateAvailability(reservationData, weddingId, requiredSpots) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
-    const updatedAvailability = await LodgingAvailability.findOneAndUpdate(
+    // Update the wedding document's lodging availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
       {
-        coupleId,
+        _id: weddingId,
         $expr: {
           $lte: [
-            { $add: ['$taken_spots', requiredSpots] },
-            '$total_spots'
+            { $add: ['$lodging.takenSpots', requiredSpots] },
+            '$lodging.totalSpots'
           ]
         }
       },
-      { $inc: { taken_spots: requiredSpots } },
+      { $inc: { 'lodging.takenSpots': requiredSpots } },
       { new: true, session }
     );
 
-    if (!updatedAvailability) {
-      throw new LodgingError('Not enough spots available', 409);
+    if (!updatedWedding) {
+      throw new LodgingError('Not enough lodging spots available', 409);
     }
 
     const newReservation = new LodgingReservation(reservationData);
     await newReservation.save({ session });
 
     await session.commitTransaction();
-    return { newReservation, updatedAvailability };
+    return {
+      newReservation,
+      updatedAvailability: {
+        total_spots: updatedWedding.lodging.totalSpots,
+        taken_spots: updatedWedding.lodging.takenSpots
+      }
+    };
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof LodgingError) {
@@ -91,7 +107,7 @@ export async function createReservationAndUpdateAvailability(reservationData, co
   }
 }
 
-export async function deleteReservationAndUpdateAvailability(invitationId, coupleId) {
+export async function deleteReservationAndUpdateAvailability(invitationId, weddingId) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
@@ -104,22 +120,29 @@ export async function deleteReservationAndUpdateAvailability(invitationId, coupl
 
     const releasedSpots = lodgingReservation.adults + lodgingReservation.children;
 
-    // Update availability
-    const updatedAvailability = await LodgingAvailability.findOneAndUpdate(
-      { coupleId },
-      { $inc: { taken_spots: -releasedSpots } },
+    // Update the wedding document's lodging availability
+    const updatedWedding = await Wedding.findOneAndUpdate(
+      { _id: weddingId },
+      { $inc: { 'lodging.takenSpots': -releasedSpots } },
       { new: true, session }
     );
 
-    if (!updatedAvailability) {
-      throw new LodgingError('Failed to update availability', 500);
+    if (!updatedWedding) {
+      throw new LodgingError('Failed to update lodging availability', 500);
     }
 
     // Delete the reservation
     await lodgingReservation.deleteOne({ session });
 
     await session.commitTransaction();
-    return { message: 'Lodging Reservation deleted successfully', releasedSpots };
+    return {
+      message: 'Lodging Reservation deleted successfully',
+      releasedSpots,
+      updatedAvailability: {
+        total_spots: updatedWedding.lodging.totalSpots,
+        taken_spots: updatedWedding.lodging.takenSpots
+      }
+    };
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof LodgingError) {
