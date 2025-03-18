@@ -77,7 +77,9 @@ router.get('/:invitationId?', async (req, res) => {
 
     // First check if there's a reservation for this invitation
     const transportationReservation = await TransportationReservation.findOne({ invitationId });
-
+    if (!transportationReservation) {
+      return res.status(404).json({ error: `Transportation Reservation not found with invitation ID ${invitationId}` });
+    }
     // Get the wedding to check transportation availability
     const wedding = await Wedding.findById(weddingId);
     if (!wedding) {
@@ -86,11 +88,7 @@ router.get('/:invitationId?', async (req, res) => {
 
     // Return both reservation (if exists) and availability information
     return res.status(200).json({
-      reservation: transportationReservation || null,
-      availability: {
-        total_spots: wedding.transportation.totalSpots,
-        taken_spots: wedding.transportation.takenSpots
-      }
+      reservation: transportationReservation
     });
   } catch (error) {
     console.error('Error in GET /transportation:', error);
