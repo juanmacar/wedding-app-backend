@@ -40,9 +40,9 @@ router.get('/wedding/:weddingId', protect, async (req, res) => {
 
     return res.status(200).json(invitations);
   } catch (error) {
-    console.error('Error in GET /api/guests/wedding/:weddingId:', error);
+    console.error('Error in GET /api/invitations/wedding/:weddingId:', error);
     return res.status(500).json({
-      error: 'An error occurred while fetching guests'
+      error: 'An error occurred while fetching invitations'
     });
   }
 });
@@ -52,9 +52,9 @@ router.get('/wedding/:weddingId', protect, async (req, res) => {
  * @desc    Get guest by invitation ID (public endpoint for RSVP)
  * @access  Public
  */
-router.get('/invitation/:invitationId', async (req, res) => {
+router.get('/:invitationId', async (req, res) => {
   try {
-    console.log('GET /api/guests/invitation request received');
+    console.log('GET /api/invitations/:invitationId request received');
     console.log('URL parameters:', req.params);
 
     const { invitationId } = req.params;
@@ -74,7 +74,7 @@ router.get('/invitation/:invitationId', async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json(invitation);
   } catch (error) {
-    console.error('Error in GET /api/guests/invitation/:invitationId:', error);
+    console.error('Error in GET /api/invitations/:invitationId:', error);
     return res.status(500).json({ error: 'An error occurred while fetching guest' });
   }
 });
@@ -84,7 +84,7 @@ router.get('/invitation/:invitationId', async (req, res) => {
  * @desc    Create a new invitation (guest entry) for a wedding
  * @access  Private
  */
-router.post('/invitation', protect, async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
     const {
       weddingId, type, mainGuest, hasCompanion, companion, hasChildren, children
@@ -126,7 +126,7 @@ router.post('/invitation', protect, async (req, res) => {
 
     return res.status(201).json(savedInvitation);
   } catch (error) {
-    console.error('Error in POST /api/guests/invitation:', error);
+    console.error('Error in POST /api/invitations', error);
     return res.status(500).json({
       error: 'An error occurred while creating the invitation'
     });
@@ -138,7 +138,7 @@ router.post('/invitation', protect, async (req, res) => {
  * @desc    Update guest RSVP information (public endpoint)
  * @access  Public
  */
-router.put('/invitation/:invitationId', async (req, res) => {
+router.put('/:invitationId', async (req, res) => {
   try {
     const { invitationId } = req.params;
     const updateFields = req.body;
@@ -154,7 +154,7 @@ router.put('/invitation/:invitationId', async (req, res) => {
     // Use _id directly as the invitationId
     const currentInvitation = await Invitation.findById(invitationId);
     if (!currentInvitation) {
-      return res.status(404).json({ error: 'Guest not found' });
+      return res.status(404).json({ error: 'Invitation not found' });
     }
 
     // Helper function to process nested objects and arrays
@@ -208,19 +208,19 @@ router.put('/invitation/:invitationId', async (req, res) => {
       // Use _id directly as the invitationId for the update function
       const updatedInvitation = await updateRSVPAndRelatedReservations(invitationId, updateFields, updateOperation);
       if (!updatedInvitation) {
-        return res.status(404).json({ error: 'Guest not found' });
+        return res.status(404).json({ error: 'Invitation not found' });
       }
       return res.status(200).json({
-        message: 'Guest updated successfully',
-        guest: updatedInvitation
+        message: 'Invitation updated successfully',
+        invitation: updatedInvitation
       });
     } catch (error) {
-      console.error('Error updating guest:', error);
-      return res.status(error.statusCode || 500).json({ error: error.message || 'An error occurred while updating guest' });
+      console.error('Error updating invitation:', error);
+      return res.status(error.statusCode || 500).json({ error: error.message || 'An error occurred while updating invitation' });
     }
   } catch (error) {
-    console.error('Error in PUT /api/guests/invitation/:invitationId:', error);
-    return res.status(500).json({ error: 'An error occurred while updating guest' });
+    console.error('Error in PUT /api/invitations/:invitationId:', error);
+    return res.status(500).json({ error: 'An error occurred while updating invitation' });
   }
 });
 

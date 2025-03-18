@@ -7,6 +7,7 @@ import {
   createReservationAndUpdateAvailability,
   deleteReservationAndUpdateAvailability
 } from '../services/lodgingReservationTransactions.js';
+import { LodgingError } from '../services/errors.js';
 
 const router = express.Router();
 
@@ -25,7 +26,12 @@ router.get('/availability/:invitationId', async (req, res) => {
       return res.status(404).json({ error: `Invitation not found with ID ${invitationId}` });
     }
 
-    const weddingId = invitation.weddingId;
+    // Check if weddingId exists before trying to use it
+    if (!invitation.weddingId) {
+      throw new LodgingError('Wedding ID not found in invitation', 400);
+    }
+
+    const weddingId = invitation.weddingId.toString();
 
     // Get the wedding to check lodging availability
     const wedding = await Wedding.findById(weddingId);
@@ -61,7 +67,12 @@ router.get('/:invitationId?', async (req, res) => {
       return res.status(404).json({ error: `Invitation not found with ID ${invitationId}` });
     }
 
-    const weddingId = invitation.weddingId;
+    // Check if weddingId exists before trying to use it
+    if (!invitation.weddingId) {
+      throw new LodgingError('Wedding ID not found in invitation', 400);
+    }
+
+    const weddingId = invitation.weddingId.toString();
 
     // First check if there's a reservation for this invitation
     const lodgingReservation = await LodgingReservation.findOne({ invitationId });
@@ -93,7 +104,12 @@ router.post('/:invitationId', async (req, res) => {
     const { body } = req;
     body.invitationId = invitationId;
     const invitation = await Invitation.findById(invitationId);
-    const weddingId = invitation.weddingId;
+    // Check if weddingId exists before trying to use it
+    if (!invitation.weddingId) {
+      throw new LodgingError('Wedding ID not found in invitation', 400);
+    }
+
+    const weddingId = invitation.weddingId.toString();
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
@@ -134,7 +150,12 @@ router.put('/:invitationId', async (req, res) => {
     const { invitationId } = req.params;
     const { body } = req;
     const invitation = await Invitation.findById(invitationId);
-    const weddingId = invitation.weddingId;
+    // Check if weddingId exists before trying to use it
+    if (!invitation.weddingId) {
+      throw new LodgingError('Wedding ID not found in invitation', 400);
+    }
+
+    const weddingId = invitation.weddingId.toString();
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
@@ -179,7 +200,12 @@ router.delete('/:invitationId', async (req, res) => {
     }
 
     const invitation = await Invitation.findById(invitationId);
-    const weddingId = invitation.weddingId;
+    // Check if weddingId exists before trying to use it
+    if (!invitation.weddingId) {
+      throw new LodgingError('Wedding ID not found in invitation', 400);
+    }
+
+    const weddingId = invitation.weddingId.toString();
 
     const lodgingReservation = await LodgingReservation.findOne({ invitationId });
     if (!lodgingReservation) {
