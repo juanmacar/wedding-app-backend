@@ -11,6 +11,7 @@ import transportationRoutes from './routes/transportation.js';
 import authRoutes from './routes/auth.js';
 import weddingsRoutes from './routes/weddings.js';
 import invitationsRoutes from './routes/invitations.js';
+import userRoutes from './routes/user.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -52,7 +53,8 @@ const startServer = async () => {
           '/api/lodging',
           '/api/transportation',
           '/api/auth',
-          '/api/weddings'
+          '/api/weddings',
+          '/api/user'
         ]
       });
     });
@@ -63,6 +65,7 @@ const startServer = async () => {
     app.use('/api/transportation', transportationRoutes);
     app.use('/api/auth', authRoutes);
     app.use('/api/weddings', weddingsRoutes);
+    app.use('/api/user', userRoutes);
 
     // Error handling middleware
     app.use(notFound);
