@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectToDatabase } from './utils/db.js';
 import { initializeDatabase } from './utils/dbInit.js';
+import { verifyEmailConfig } from './services/email/index.js';
 
 // Import routes
 import lodgingRoutes from './routes/lodging.js';
@@ -43,6 +44,14 @@ const startServer = async () => {
     await connectToDatabase(MONGODB_URI);
     await initializeDatabase();
     console.log('Connected to MongoDB and initialized database');
+
+    // Verify email configuration
+    const emailConfigValid = await verifyEmailConfig();
+    if (emailConfigValid) {
+      console.log('Email service configured successfully');
+    } else {
+      console.warn('Email service configuration invalid or missing - email features will not work');
+    }
 
     // Root route
     app.get('/', (req, res) => {

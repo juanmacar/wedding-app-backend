@@ -12,7 +12,6 @@
         "import/extensions": ["error", "always"],
         "no-console": "off",
         "no-underscore-dangle": "off",
-        "max-len": ["warn", { "code": 150 }],
         "no-param-reassign": "off",
         "camelcase": "off",
         "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
