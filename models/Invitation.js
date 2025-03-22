@@ -12,6 +12,11 @@ const invitationSchema = new mongoose.Schema({
     ref: 'Wedding',
     required: true
   },
+  phone: {
+    type: String,
+    trim: true,
+    default: null
+  },
   type: {
     type: String,
     required: true,
