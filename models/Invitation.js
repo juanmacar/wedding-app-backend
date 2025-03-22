@@ -32,11 +32,6 @@ const invitationSchema = new mongoose.Schema({
       required: true,
       trim: true
     },
-    phone: {
-      type: String,
-      required: true,
-      trim: true
-    },
     attending: {
       type: Boolean,
       default: null
