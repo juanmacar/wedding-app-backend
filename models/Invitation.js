@@ -22,6 +22,10 @@ const invitationSchema = new mongoose.Schema({
     required: true,
     enum: ['single', 'couple', 'family']
   },
+  sent: {
+    type: Boolean,
+    default: false
+  },
   mainGuest: {
     name: {
       type: String,
