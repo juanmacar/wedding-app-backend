@@ -25,7 +25,8 @@
         "import/prefer-default-export": "off",
         "max-classes-per-file": "off",
         "import/no-unresolved": "off",
-        "prefer-destructuring": "off"
+        "prefer-destructuring": "off",
+        "max-len": "off"
     },
     "ignorePatterns": ["node_modules/**"]
 }
