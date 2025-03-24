@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Invitation from '../models/Invitation.js';
 import LodgingReservation from '../models/LodgingReservation.js';
 import Wedding from '../models/Wedding.js';
@@ -18,6 +19,10 @@ router.get('/availability/:invitationId', async (req, res) => {
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
+    }
+
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
     }
 
     // Find the invitation to get the weddingId
@@ -62,6 +67,10 @@ router.get('/:invitationId?', async (req, res) => {
       return res.status(400).json({ error: 'invitationId is required' });
     }
 
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
+    }
+
     const invitation = await Invitation.findById(invitationId);
     if (!invitation) {
       return res.status(404).json({ error: `Invitation not found with ID ${invitationId}` });
@@ -99,6 +108,11 @@ router.get('/:invitationId?', async (req, res) => {
 router.post('/:invitationId', async (req, res) => {
   try {
     const { invitationId } = req.params;
+
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
+    }
+
     const { body } = req;
     body.invitationId = invitationId;
     const invitation = await Invitation.findById(invitationId);
@@ -151,6 +165,11 @@ router.post('/:invitationId', async (req, res) => {
 router.put('/:invitationId', async (req, res) => {
   try {
     const { invitationId } = req.params;
+
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
+    }
+
     const { body } = req;
     const invitation = await Invitation.findById(invitationId);
     if (!invitation) {

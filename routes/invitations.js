@@ -65,6 +65,10 @@ router.get('/:invitationId', async (req, res) => {
       return res.status(400).json({ error: 'invitationId is required' });
     }
 
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
+    }
+
     // Use _id directly as the invitationId
     const invitation = await Invitation.findById(invitationId);
     if (!invitation) {
@@ -145,6 +149,10 @@ router.put('/:invitationId', async (req, res) => {
 
     if (!invitationId) {
       return res.status(400).json({ error: 'invitationId is required' });
+    }
+
+    if (!mongoose.isValidObjectId(invitationId)) {
+      return res.status(400).json({ error: 'Invalid invitation ID format' });
     }
 
     // Prepare update operation
