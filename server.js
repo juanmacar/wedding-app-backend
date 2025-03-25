@@ -27,10 +27,21 @@ const MONGODB_URI = process.env.MONGODB_URI;
 // Middleware
 // Configure CORS based on environment
 const corsOptions = {
-  origin: process.env.ENVIRONMENT === 'prod'
-    ? 'https://abrilyjuan.com'
-    : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  origin(origin, callback) {
+    // For development or when origin is undefined (like postman requests)
+    if (!origin || process.env.ENVIRONMENT !== 'prod') {
+      return callback(null, true);
+    }
+
+    // For production
+    if (origin === 'https://abrilyjuan.com') {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
