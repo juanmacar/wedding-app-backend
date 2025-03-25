@@ -25,7 +25,16 @@ const PORT = process.env.PORT || 3001; // Changed to 3001
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // Middleware
-app.use(cors());
+// Configure CORS based on environment
+const corsOptions = {
+  origin: process.env.ENVIRONMENT === 'prod'
+    ? 'https://abrilyjuan.com'
+    : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
