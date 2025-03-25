@@ -5,7 +5,7 @@ dotenv.config();
 
 const copyCollectionData = async () => {
   try {
-    await mongoose.connect('mongodb+srv://juanmacarlupu:0CHSpJcccml08lAg@casamiento2025.2wsn6.mongodb.net/casamiento2025?retryWrites=true&w=majority&appName=Casamiento2025');
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
     const db = mongoose.connection.db;

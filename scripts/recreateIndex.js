@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const MONGODB_URI = 'mongodb+srv://juanmacarlupu:0CHSpJcccml08lAg@casamiento2025.2wsn6.mongodb.net/casamiento2025?retryWrites=true&w=majority&appName=Casamiento2025';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const recreateIndex = async () => {
   try {

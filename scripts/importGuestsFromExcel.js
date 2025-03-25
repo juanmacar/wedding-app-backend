@@ -69,7 +69,7 @@ async function processGuestsExcel(filePath, weddingId, sheetName = null) {
     // Map Excel records to the format expected by createInvitationsFromGuestData
     const guestData = records.map((record) => ({
       guestName: record.Nombre,
-      guestType: record.Tipo.toLowerCase(),
+      guestType: record.Tipo ? record.Tipo.toLowerCase() : 'adulto',
       group: parseInt(record.Grupo, 10),
       phone: record.Celular || null
     }));
